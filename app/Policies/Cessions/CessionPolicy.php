@@ -26,7 +26,7 @@ class CessionPolicy
             return true;
         } else if ($cession->assignment && $user->id === $cession->assignment->id_user) {
             return true;
-        } else if ($user->isMinistere() && $cession->id_tpi === $user->id_tpi) {
+        } else if ($user->isAdminLocal() && $cession->id_tpi === $user->id_tpi) {
             return true;
         } else {
             return false;

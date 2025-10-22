@@ -18,8 +18,6 @@ class MagistratController extends Controller {
     }
 
 
-// ------------------------------- ------------------------------- ------------------------------- Cession Assignment
-
     public function storeCessionMagistrat ($idCession, Request $request) {
         try {
             
@@ -65,7 +63,6 @@ class MagistratController extends Controller {
         }
     }
 
-    
     public function getMagistratByCession($idCession) {
 
         $magistrat = $this->cessionMagistratService->findMagistratByCession($idCession);
@@ -74,6 +71,7 @@ class MagistratController extends Controller {
             'magistrat' => $magistrat
         ]);
     }
+
     public function getAllCessionByMagistrat($idUser, Request $request)
     {
         $this->authorize('viewAny', CessionMagistrat::class);

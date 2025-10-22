@@ -26,17 +26,23 @@ class CessionBorrowerRequest extends FormRequest
 
         $isUpdate = !is_null($idCessionBorrower);
 
-        $cin = 'required|numeric|digits:12|unique:cession_party,cin';
+        $cin = 'required|numeric|digits:12|unique:cession_natural_person,cin';
+        $address = 'required|string';
     
         if ($isUpdate) {
-            $cessionParty = CessionBorrower::find($idCessionBorrower, ['id_cession_party']);
-            $cin = 'required|numeric|digits:12|unique:cession_party,cin,'. $cessionParty->id_cession_party;
+            $cessionNaturalPerson = CessionBorrower::find($idCessionBorrower, ['id_cession_natural_person']);
+            $cin = 'required|numeric|digits:12|unique:cession_natural_person,cin,'. $cessionNaturalPerson->id_cession_natural_person;
+            
+            if ($this->input('new_address') === false) {
+                $address = 'required|numeric';
+            } 
+
         }
 
         return [
             'last_name' => 'required|string',
             'first_name' => 'required|string',
-            'address' => 'required|string',
+            'address' => $address,
             'cin' => $cin,
             'salary_amount' => 'required|numeric|min:0',
             'remark' => 'nullable|string',

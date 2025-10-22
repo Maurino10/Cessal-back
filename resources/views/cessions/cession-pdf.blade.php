@@ -98,9 +98,15 @@
                             </td>
                             @php $firstRow = false; @endphp
                         @endif
-                        <td>Demandeur</td>
-                        <td>{{ $lender['party']['last_name'] ?? '-' }}</td>
-                        <td>{{ $lender['party']['first_name'] ?? '-' }}</td>
+                        <td>Prêteur</td>
+                        @if($lender['id_cession_natural_person']) 
+                            <td>{{ $lender['naturalPerson']['last_name'] ?? '-' }}</td>
+                            <td>{{ $lender['naturalPerson']['first_name'] ?? '-' }}</td>
+                        @endif
+                        @if ($lender['id_cession_legal_person'])
+                            <td>{{ $lender['legalPerson']['name'] .", ". $lender['legalPerson']['address']}}</td>
+                            <td></td>
+                        @endif
                         <td class="text-right"></td>
                         <td class="text-right"></td>
                         <td class="text-right"></td>
@@ -141,9 +147,9 @@
                             </td>
                             @php $firstRow = false; @endphp
                         @endif
-                        <td>Défendeur</td>
-                        <td>{{ $borrower['party']['last_name'] ?? '-' }}</td>
-                        <td>{{ $borrower['party']['first_name'] ?? '-' }}</td>
+                        <td>Emprunteur</td>
+                        <td>{{ $borrower['naturalPerson']['last_name'] ?? '-' }}</td>
+                        <td>{{ $borrower['naturalPerson']['first_name'] ?? '-' }}</td>
                         <td class="text-right nowrap">
                             {{ isset($borrower['salary_amount']) ? number_format($borrower['salary_amount'], 0, ',', ' ') . ' Ar' : '-' }}
                         </td>

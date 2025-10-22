@@ -17,5 +17,6 @@ class CessionProvision extends Model
 
     protected $fillable = [
         'provision_amount',
+        'date_provision'
     ];
 }

@@ -33,9 +33,15 @@
 
                         @php $firstRow = false; @endphp
                     @endif
-                    <td width="15" height="15" bgcolor="#dbeafe">Demandeur</td>
-                    <td width="50" height="15" bgcolor="#dbeafe">{{ $lender['party']['last_name'] }}</td>
-                    <td width="50" height="15" bgcolor="#dbeafe">{{ $lender['party']['first_name'] }}</td>
+                    <td width="15" height="15" bgcolor="#dbeafe">Prêteur</td>
+                    @if ($lender['id_cession_natural_person'])
+                        <td width="50" height="15" bgcolor="#dbeafe">{{ $lender['naturalPerson']['last_name'] }}</td>
+                        <td width="50" height="15" bgcolor="#dbeafe">{{ $lender['naturalPerson']['first_name'] }}</td>
+                    @endif
+                    @if ($lender['id_cession_legal_person'])
+                        <td width="50" height="15" bgcolor="#dbeafe">{{ $lender['legalPerson']['name'] .", ". $lender['legalPerson']['address'] }}</td>
+                        <td width="50" height="15" bgcolor="#dbeafe"></td>
+                    @endif
                     <td width="25" height="15" bgcolor="#dbeafe"></td>
                     <td width="25" height="15" bgcolor="#dbeafe"></td>
                     <td width="15" height="15" bgcolor="#dbeafe"></td>
@@ -45,9 +51,9 @@
             {{-- Affichage des défendeurs --}}
             @foreach($cession['borrowers'] as $borrower)
                 <tr>
-                    <td width="15" height="15" bgcolor="#fef3c7">Défendeur</td>
-                    <td width="50" height="15" style="word-wrap: break-word;" bgcolor="#fef3c7">{{ $borrower['party']['last_name'] }}</td>
-                    <td width="50" height="15" style="word-wrap: break-word;" bgcolor="#fef3c7">{{ $borrower['party']['first_name'] }}</td>
+                    <td width="15" height="15" bgcolor="#fef3c7">Emprunteur</td>
+                    <td width="50" height="15" style="word-wrap: break-word;" bgcolor="#fef3c7">{{ $borrower['naturalPerson']['last_name'] }}</td>
+                    <td width="50" height="15" style="word-wrap: break-word;" bgcolor="#fef3c7">{{ $borrower['naturalPerson']['first_name'] }}</td>
                     <td width="25" height="15" bgcolor="#fef3c7" style="text-align: right;">{{ number_format($borrower['salary_amount'], 0, ',', ' ') }} Ar</td>
                     <td width="25" height="15" bgcolor="#fef3c7" style="text-align: right;">
                         @if(isset($borrower['quota']['granted_amount']))

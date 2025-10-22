@@ -1,11 +1,12 @@
-INSERT INTO gender (name) VALUES
-    ('Homme'),
-    ('Femme');
+    INSERT INTO gender (name) VALUES
+        ('Homme'),
+        ('Femme');
 
-INSERT INTO post (name, role) VALUES 
-    ('Greffier', 'greffier'),
-    ('Magistrat', 'magistrat'),
-    ('Ministère', 'ministere');
+    INSERT INTO post (name, role) VALUES
+        ('Greffier', 'greffier'),
+        ('Magistrat', 'magistrat'),
+        ('Admin Local', 'admin_local'),
+        ('Ministère', 'ministere');
 
     -- INSERTS pour la table profil (avec id explicite PR000001..PR000020)
     INSERT INTO profil (id, last_name, first_name, birthday, address, cin, immatriculation, email, id_gender) VALUES
@@ -118,8 +119,8 @@ INSERT INTO post (name, role) VALUES
 
 
 
-INSERT INTO cession_party_address (id_cession_party, address, date_address) VALUES (38, 'Lot IB 35/01 Ambatonakanga, Antananarivo', '2025-10-05'); 
-INSERT INTO cession_party_address (id_cession_party, address, date_address) VALUES (39, 'Lot Bloc 32/02 67Ha, Antananarivo', '2025-10-05');        
-INSERT INTO cession_party_address (id_cession_party, address, date_address) VALUES (40, 'Lot LV 46 Anosibe, Antananarivo', '2025-10-05');          
-INSERT INTO cession_party_address (id_cession_party, address, date_address) VALUES (41, 'Lot DP 015 Ankorondrano, Antananarivo', '2025-10-05');    
-INSERT INTO cession_party_address (id_cession_party, address, date_address) VALUES (42, 'Lot MT 01/A9 Analamahitsy', '2025-10-05');                  
+INSERT INTO cession_natural_person_address (id_cession_natural_person, address, date_address) VALUES (38, 'Lot IB 35/01 Ambatonakanga, Antananarivo', '2025-10-05'); 
+INSERT INTO cession_natural_person_address (id_cession_natural_person, address, date_address) VALUES (39, 'Lot Bloc 32/02 67Ha, Antananarivo', '2025-10-05');        
+INSERT INTO cession_natural_person_address (id_cession_natural_person, address, date_address) VALUES (40, 'Lot LV 46 Anosibe, Antananarivo', '2025-10-05');          
+INSERT INTO cession_natural_person_address (id_cession_natural_person, address, date_address) VALUES (41, 'Lot DP 015 Ankorondrano, Antananarivo', '2025-10-05');    
+INSERT INTO cession_natural_person_address (id_cession_natural_person, address, date_address) VALUES (42, 'Lot MT 01/A9 Analamahitsy', '2025-10-05');                  

@@ -65,6 +65,10 @@ class User extends Authenticatable
         return $this->post->role === 'magistrat';
     }
 
+    public function isAdminLocal () {
+        return $this->post->role === 'admin_local';
+    }
+
     public function isMinistere () {
         return $this->post->role === 'ministere';
     }

@@ -33,62 +33,6 @@ class CessionController extends Controller {
     }
 
 // ------------------------------- ------------------------------- ------------------------------- Cession
-    // public function storeCession (CessionRequest $request) {
-    //     try {
-    //         $this->authorize('create', Cession::class);
-
-    //         DB::beginTransaction();
-            
-    //         $data = $request->validated();
-
-            
-    //         $idCession = $this->cessionService->saveCession(
-    //             $data['numero_dossier'], 
-    //             $data['request_subject'], 
-    //             $data['reimbursed_amount'], 
-    //             $data['date_cession'], 
-    //             $data['tpi'], 
-    //             $data['user']
-    //         );
-    
-    //         foreach ($data['lenders'] as $value) {
-    //             $lender = $this->cessionPersonService->saveCessionLender(
-    //                 $value['last_name'], 
-    //                 $value['first_name'], 
-    //                 $value['address'], 
-    //                 $value['cin'],
-    //                 $value['gender'],
-    //                 $idCession
-    //             );
-
-    //         } 
-            
-    //         foreach ($data['borrowers'] as $value) {
-
-    //             $borrower = $this->cessionPersonService->saveCessionBorrower(
-    //                 $value['last_name'], 
-    //                 $value['first_name'], 
-    //                 $value['address'], 
-    //                 $value['cin'],
-    //                 $value['salary_amount'], 
-    //                 $value['remark'],
-    //                 $value['gender'],
-    //                 $idCession
-    //             );
-    //         }        
-    
-    //         DB::commit();
-            
-    //         return response()->json([
-    //             'cession' => $idCession
-    //         ]);
-
-    //     } catch (Exception $e) { 
-    //         Log::info($e);
-    //         DB::rollBack();
-    //     }
-    // }
-
     public function storeCession (CessionRequest $request) {
         $this->authorize('create', Cession::class);
         
@@ -218,6 +162,27 @@ class CessionController extends Controller {
         ]);
     }
 
+    public function filterCession (Request $request) {
+        
+        $this->authorize('viewAny', Cession::class);
+        
+        $tpi = $request->input('tpi');
+        $statut = $request->input('statut');
+        $dateStart = $request->input('dateStart');
+        $dateEnd = $request->input('dateEnd');
+
+        $cessions = $this->cessionService->filterCessionByTPI(
+            $tpi, 
+            $statut,
+            $dateStart,
+            $dateEnd,
+        );
+
+        return response()->json([
+            'cessions' => $cessions
+        ]);
+    }
+
     public function acceptCession ($idCession) {
 
         $cession = CessionMagistrat::where('id_cession', $idCession)->first();
@@ -244,72 +209,17 @@ class CessionController extends Controller {
         ]);
     }
 
-    public function signCession ($idCession) {
-
+    public function cessionIsSigned ($idCession) {
         $cession = Cession::findOrFail($idCession);
 
         $this->authorize('update', $cession);
 
-        $this->cessionService->updateCessionStatus($idCession, 4);
+        $this->cessionService->cessionIsSigned($idCession, 1);
 
         return response()->json([
-            'message' => 'Cession acceptée'
+            'message' => 'Cession signée'
         ]);
     }
-
-// ------------------------------- ------------------------------- ------------------------------- Mention d'execution
-    // public function generateMentionExecution ($idCession) {
-    //     $cession = $this->cessionService->findCession($idCession);
-
-    //     $this->authorize('update', $cession);
-
-    //     $templatePath = storage_path('app/templates/mention_execution.docx');
-
-    //     if (!file_exists(($templatePath))) {
-    //         Log::info('Le fichier modèle n\'existe pas.');
-    //         return response()->json(['error' => 'Le fichier modèle n\'existe pas.'], 404);
-    //     }
-
-    //     try {
-
-    //         $templateProcessor = new TemplateProcessor($templatePath);   
-
-    //         $templateProcessor->setValues(array(
-    //             'numero_dossier' => $cession->numero_dossier,
-    //             'numero_ordonnance' => $cession->ordonnance->numero_ordonnance,
-    //             'date_cession' => $cession->date_cession,
-    //             'request_subject' => $cession->request_subject,
-    //             'reimbursed_amount' => $cession->reimbursed_amount
-    //         ));
-
-    //         $docxPath = storage_path('app/public/mention_execution_' . time() . '.docx');
-    //         $templateProcessor->saveAs($docxPath);
-
-    //         // Charger le DOCX pour conversion
-    //         $phpWord = IOFactory::load($docxPath);
-
-    //         // Export en PDF avec Dompdf
-    //         $pdfPath = str_replace('.docx', '.pdf', $docxPath);
-
-    //         $domPdfPath = base_path('vendor/dompdf/dompdf');
-    //         Settings::setPdfRendererPath($domPdfPath);
-    //         Settings::setPdfRendererName('DomPDF');
-
-    //         $pdfWriter = IOFactory::createWriter($phpWord, 'PDF');
-
-    //         $pdfWriter->save($pdfPath);
-            
-    //         if (file_exists($docxPath)) {
-    //             unlink($docxPath);
-    //         }
-
-    //         // Retourner le PDF en téléchargement
-    //         return response()->download($pdfPath)->deleteFileAfterSend();
-
-    //     } catch (Exception $e) {
-    //         return response()->json(['error' => 'Erreur lors de la génération du document : ' . $e->getMessage()], 500);
-    //     }
-    // }
 
 // ------------------------------- ------------------------------- ------------------------------- Export
 
@@ -324,7 +234,8 @@ class CessionController extends Controller {
             $statut,
             $dateStart,
             $dateEnd,
-        );
+        );  
+
         
         return Excel::download(new CessionExport($cessions), 'cessions.xlsx');
     }
@@ -357,8 +268,8 @@ class CessionController extends Controller {
                 'tpi' => $tpi,
                 'ca' => $ca,
                 'statut' => $status[$statut],
-                'dateStart' => $dateStart !== 'null' ? formattedDate($dateStart) : '-',
-                'dateEnd' => $dateEnd !== 'null' ? formattedDate($dateEnd) : '-',
+                'dateStart' => $dateStart !== 'null' ? formattedDate($dateStart, 'D/MM/YYYY') : '-',
+                'dateEnd' => $dateEnd !== 'null' ? formattedDate($dateEnd, 'D/MM/YYYY') : '-',
                 'cessions' => $cessions,
             ])->setPaper('a4', 'landscape'); // Paysage
         
@@ -366,81 +277,4 @@ class CessionController extends Controller {
 
     }
 
-
-    
-// // ------------------------------- ------------------------------- ------------------------------- Cession Draft
-
-//     public function createTempCession(Request $request){
-//         try {
-//             $data = $request->validate([
-//                 'user' => 'required|string',
-//                 'key' => 'required|numeric',
-//                 'data' => 'required'
-//             ]);
-
-//             $file = "cession-".$data['user']."-".$data['key'].".json";
-
-//             $existingData = [];
-
-//             if (Storage::disk('public')->exists('tmp/cessions/'.$file)) {
-//                 $json = Storage::disk('public')->get('tmp/cessions/'.$file);
-//                 $existingData = json_decode($json, true) ?? [];
-
-//             }
-
-//             foreach ($data['data'] as $key => $value) {
-//                 $existingData[$key] = $value;
-//             }
-            
-//             // Sauvegarde dans storage/app/public/fichiers/data.json
-//             Storage::disk('public')->put('tmp/cessions/'.$file, json_encode($existingData, JSON_PRETTY_PRINT));
-
-//             return response()->json(['message' => 'Fichier JSON sauvegardé avec succès']);
-//         } catch (Exception $e) {
-//             Log::info($e);
-//         }
-//     }
-
-//     public function getTempCession($idUser) {
-//         try {
-//             $path = storage_path("app/public/tmp/cessions/cession-$idUser-*.json");
-//             $files = glob($path);
-
-//             $data = [];
-
-//             foreach ($files as $file) {
-//                 $json = file_get_contents($file);
-//                 $data[] = [
-//                     'file' => basename($file),
-//                     'data' => json_decode($json, true)
-//                 ]; // Décoder en tableau associatif
-//             }
-
-//             return response()->json([
-//                 'temp_cessions' => $data
-//             ]);
-//         } catch (Exception $e) {
-            
-//         }
-//     }
-
-//     public function deleteTempCession($idUser, Request $request) {
-//         try {
-//             $data = $request->validate([
-//                 'file_name' => 'required|string'
-//             ]);
-
-
-//             if (Storage::disk('public')->exists('tmp/cessions/'.$data['file_name'])) {
-//                 Log::info($data['file_name']);
-//                 Storage::disk('public')->delete('tmp/cessions/'.$data['file_name']);
-//             }
-
-//             return response()->json([
-//                 'message' => "Fichier temporaire supprimé"
-//             ]);
-//         } catch (Exception $e) {
-            
-//         }
-//     }
 }  

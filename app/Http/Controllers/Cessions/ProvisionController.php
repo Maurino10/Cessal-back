@@ -18,14 +18,19 @@ class ProvisionController {
     public function storeCessionProvision (Request $request) {
         try {
             $data = $request->validate([
-                'provision_amount' => 'required|numeric|min:0'
+                'provision_amount' => 'required|numeric|min:0',
+                'date_provision' => 'required|date',
             ], [
                 'provision_amount.required' => 'Le montant de la provision est obligatoire.',
                 'provision_amount.numeric' => 'Le montant de la provision doit être un nombre.',
                 'provision_amount.min' => 'Le montant de la provision doit être positif.',
+                'date_provision.required' => 'La date est obligatoire.',
             ]);
 
-            $provision = $this->cessionProvisionService->saveProvision($data['provision_amount']);
+            $provision = $this->cessionProvisionService->saveProvision(
+                $data['provision_amount'], 
+                $data['date_provision']
+            );
 
             return response()->json([
                 "provision" => $provision
@@ -38,18 +43,20 @@ class ProvisionController {
     public function editCessionProvision ($idCessionProvision, Request $request) {
         try {
             $data = $request->validate([
-                'provision_amount' => 'required|numeric|min:0'
+                'provision_amount' => 'required|numeric|min:0',
+                'date_provision' => 'required|date',
+
             ], [
                 'provision_amount.required' => 'Le montant de la provision est obligatoire.',
                 'provision_amount.numeric' => 'Le montant de la provision doit être un nombre.',
                 'provision_amount.min' => 'Le montant de la provision doit être positif.',
+                'date_provision.required' => 'La date est obligatoire.',
             ]);
-
-            Log::info($data);
 
             $provision = $this->cessionProvisionService->updateProvision(
                 $idCessionProvision, 
-                $data['provision_amount']
+                $data['provision_amount'],
+                $data['date_provision']
             );
 
             return response()->json([
@@ -60,11 +67,11 @@ class ProvisionController {
         }
     }  
 
-    public function getCessionProvision () {
-        $provision = $this->cessionProvisionService->findProvision();
+    public function getAllCessionProvision () {
+        $provisions = $this->cessionProvisionService->findAllProvision();
 
         return response()->json([
-            "provision" => $provision
+            "provisions" => $provisions
         ]);        
     }
 

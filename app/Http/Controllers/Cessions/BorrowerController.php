@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Cessions;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cessions\CessionBorrowerRequest;
-use App\Http\Requests\Cessions\CessionReferenceRequest;
 use App\Models\Cessions\Cession;
-use App\Services\Cessions\CessionPersonService;
+use App\Services\Cessions\CessionBorrowerService;
+use App\Services\Cessions\CessionNaturalPersonService;
 use App\Services\Cessions\CessionProvisionService;
 use App\Services\Cessions\CessionReferenceService;
 use Exception;
@@ -18,12 +18,14 @@ use PhpOffice\PhpWord\TemplateProcessor;
 class BorrowerController extends Controller {
 
 
-    protected $cessionPersonService;
+    protected $cessionBorrowerService;
+    protected $cessionNaturalPersonService;
     protected $cessionProvisionService;
     protected $cessionReferenceService;
 
-    public function __construct(CessionPersonService $cessionPersonService, CessionReferenceService $cessionReferenceService, CessionProvisionService $cessionProvisionService) {
-        $this->cessionPersonService = $cessionPersonService;
+    public function __construct(CessionBorrowerService $cessionBorrowerService, CessionNaturalPersonService $cessionNaturalPersonService, CessionReferenceService $cessionReferenceService, CessionProvisionService $cessionProvisionService) {
+        $this->cessionBorrowerService = $cessionBorrowerService;
+        $this->cessionNaturalPersonService = $cessionNaturalPersonService;
         $this->cessionProvisionService = $cessionProvisionService;
         $this->cessionReferenceService = $cessionReferenceService;
     }
@@ -37,15 +39,17 @@ class BorrowerController extends Controller {
 
             $data = $request->validated();
     
-            $borrower = $this->cessionPersonService->saveCessionBorrower(
+            $borrower = $this->cessionBorrowerService->saveCessionBorrower(
                 $data['last_name'], 
                 $data['first_name'], 
                 $data['cin'],
+                $data['address'],
                 $data['salary_amount'], 
                 $data['remark'],
                 $data['gender'],
                 $idCession
             );
+
 
             return response()->json([
                 'borrower' => $borrower
@@ -59,7 +63,8 @@ class BorrowerController extends Controller {
             $this->authorize('store', $cession);
             
             $data = $request->validate([
-                'party' => 'required|numeric',
+                'natural_person' => 'required|numeric',
+                'natural_person_address' => 'required|numeric',
                 'salary_amount' => 'required|numeric|min:0',
                 'remark' => 'nullable|string',
             ], [
@@ -68,11 +73,12 @@ class BorrowerController extends Controller {
                 'salary_amount.min' => 'Le revenu doit être positif.',
             ]);
             
-            $borrower = $this->cessionPersonService->saveCessionBorrowerExists(
+            $borrower = $this->cessionBorrowerService->saveCessionBorrowerExists(
                 $data['salary_amount'],
                 $data['remark'],
                 $idCession,
-                $data['party']
+                $data['natural_person'],
+                $data['natural_person_address'],
             );
     
     
@@ -86,14 +92,14 @@ class BorrowerController extends Controller {
         }
     }
 
-       public function storeCessionBorrowerExistsNewAddress ($idCession, Request $request) {
+    public function storeCessionBorrowerExistsNewAddress ($idCession, Request $request) {
         try {
             $cession = Cession::findOrFail($idCession);
     
             $this->authorize('store', $cession);
             
             $data = $request->validate([
-                'party' => 'required|numeric',
+                'natural_person' => 'required|numeric',
                 'address' => 'required|string',
                 'salary_amount' => 'required|numeric|min:0',
                 'remark' => 'nullable|string',
@@ -105,17 +111,14 @@ class BorrowerController extends Controller {
                 'salary_amount.min' => 'Le revenu doit être positif.',
             ]);
             
-            $borrower = $this->cessionPersonService->saveCessionBorrowerExists(
+            $borrower = $this->cessionBorrowerService->saveCessionBorrowerExistsNewAddress(
                 $data['salary_amount'],
                 $data['remark'],
                 $idCession,
-                $data['party']
+                $data['natural_person'],
+                $data['address'],
             );
     
-            $address = $this->cessionPersonService->saveCessionPartyAddress(
-                $data['address'],
-                $data['party']
-            );
 
             return response()->json([
                 'borrower' => $borrower
@@ -126,6 +129,7 @@ class BorrowerController extends Controller {
             ], 422);
         }
     }
+
     public function editCessionBorrower($idCession, $idCessionBorrower, CessionBorrowerRequest $request) {
 
         $cession = Cession::findOrFail($idCession);
@@ -134,15 +138,40 @@ class BorrowerController extends Controller {
 
         $data = $request->validated();
 
-        $borrower = $this->cessionPersonService->updateCesssionBorrower(
+        $borrower = $this->cessionBorrowerService->updateCesssionBorrower(
             $idCessionBorrower,
             $data['last_name'], 
             $data['first_name'], 
-            $data['address'], 
             $data['cin'], 
             $data['salary_amount'], 
-            $data['remark'],
-            $data['gender']
+            $data['remark'], 
+            $data['gender'],
+            $data['address']
+        );
+
+
+        return response()->json([
+            'borrower' => $borrower
+        ]);
+    }
+
+    public function editCessionBorrowerNewAddress($idCession, $idCessionBorrower, CessionBorrowerRequest $request) {
+
+        $cession = Cession::findOrFail($idCession);
+
+        $this->authorize('store', $cession);
+
+        $data = $request->validated();
+
+        $borrower = $this->cessionBorrowerService->updateCesssionBorrowerNewAddress(
+            $idCessionBorrower,
+            $data['last_name'], 
+            $data['first_name'], 
+            $data['cin'], 
+            $data['address'],
+            $data['salary_amount'], 
+            $data['remark'], 
+            $data['gender'],
         );
 
 
@@ -157,7 +186,7 @@ class BorrowerController extends Controller {
 
         $this->authorize('store', $cession);
         
-        $this->cessionPersonService->deleteCessionBorrower($idCessionBorrower);
+        $this->cessionBorrowerService->deleteCessionBorrower($idCessionBorrower);
 
         return response()->json([
             'message' => 'Défendeur supprimé avec succés'
@@ -170,7 +199,7 @@ class BorrowerController extends Controller {
 
         $this->authorize('view', $cession);
 
-        $borrowers = $this->cessionPersonService->findAllCessionBorrowerByCession($idCession);
+        $borrowers = $this->cessionBorrowerService->findAllCessionBorrowerByCession($idCession);
 
         return response()->json([
             'borrowers' => $borrowers
@@ -183,7 +212,7 @@ class BorrowerController extends Controller {
 
         $this->authorize('view', $cession);
 
-        $borrowers = $this->cessionPersonService->findAllCessionBorrowerHaveQuotaByCession($idCession);
+        $borrowers = $this->cessionBorrowerService->findAllCessionBorrowerHaveQuotaByCession($idCession);
 
         return response()->json([
             'borrowers' => $borrowers
@@ -195,14 +224,13 @@ class BorrowerController extends Controller {
 
         $this->authorize('view', $cession);
 
-        $borrower = $this->cessionPersonService->findCessionBorrower($idCessionBorrower);
-        $borrower->load(['party', 'quota', 'reference']);
+        $borrower = $this->cessionBorrowerService->findCessionBorrower($idCessionBorrower);
+        $borrower->load(['naturalPerson', 'naturalPersonAddress', 'quota', 'reference']);
 
         return response()->json([
             'borrower' => $borrower
         ]);
     }
-
 
     public function generateDeclaration($idCession, $idCessionBorrower, $idCessionReference)
     {
@@ -212,28 +240,27 @@ class BorrowerController extends Controller {
             $cession = Cession::find($idCession);
             $this->authorize('update', $cession);
 
+            $provision = $this->cessionProvisionService->findProvisionDateCession($cession->date_cession);
             $reference = $this->cessionReferenceService->findReference($idCessionReference);
             
             $magistrat = $cession->assignment->user->profil;
-            $borrower = $this->cessionPersonService->findCessionBorrower($idCessionBorrower);
+            $borrower = $this->cessionBorrowerService->findCessionBorrower($idCessionBorrower);
 
             $lenders = $cession->lenders;
 
-            $entities = [];
-            $persons = [];
+            $legalPerson = [];
+            $naturalPerson = [];
 
             foreach ($lenders as $lender) {
-                if ($lender->type === 'person') {
-                    $persons[] =  trim($lender->party->last_name . ' ' . $lender->party->first_name);
+                if ($lender->type === 'natural_person') {
+                    $naturalPerson[] =  trim($lender->naturalPerson->last_name . ' ' . $lender->naturalPerson->first_name);
                 } else {
-                    $entities[] = trim($lender->entity->name);
+                    $legalPerson[] = trim($lender->legalPerson->name . ' ' . $lender->legalPerson->address);
                 }
             }
 
-            $lendersList = array_merge($entities, $persons);
+            $lendersList = array_merge($legalPerson, $naturalPerson);
             $lendersString = implode(', ', $lendersList);
-
-            Log::info(count($entities));
 
             // Chemin vers le modèle Word
             $templatePath = storage_path('app/templates/Declaration_de_cession_volontaire_sur_salaire.docx');
@@ -247,15 +274,16 @@ class BorrowerController extends Controller {
             
             $templateProcessor->setValues([
                 'TPI' => str_replace('TPI', '', $cession->tpi->name),
-                'provision' => number_format($reference->provision, 0, ',', ' '),
+                'provision' => number_format($provision->provision_amount, 0, ',', ' '),
                 'recu' => $reference->numero_recu,
                 'feuillet' => $reference->numero_feuillet,
                 'repertoire' => $reference->numero_repertoire,
-                'date' => formattedDate($reference->date),
+                'date' => formattedDate($reference->date, 'D MMM YYYY'),
                 'magistrat' => appelation($magistrat),
-                'borrower' => appelation($borrower->party),
-                'address' => $borrower->party->address,
-                'lenders' => count($entities) === 0 ? 'de '. $lendersString : 'de la '. $lendersString,
+                'borrower' => appelation($borrower->naturalPerson),
+                'address' => $borrower->naturalPersonAddress->address,
+                'lenders' => count($legalPerson) === 0 ? 'de '. $lendersString : 'de la '. $lendersString,
+                'date_contrat' => formattedDate($cession->date_contrat, 'D/MM/YYYY'),
                 'granted_amount_number' => number_format($borrower->quota->granted_amount, 0, ',', ' '),
                 'granted_amount_letter' => spell_money_ariary($borrower->quota->granted_amount),
                 'reimbursed_amount_number' => number_format($cession->reimbursed_amount, 0, ',', ' '),

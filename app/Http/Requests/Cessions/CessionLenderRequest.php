@@ -29,13 +29,18 @@ class CessionLenderRequest extends FormRequest
         $isUpdate = !is_null($idCessionLender);
 
         
-        if ($this->input('type') === 'person') {
+        if ($this->input('type') === 'natural_person') {
 
-            $cin = 'required|numeric|digits:12|unique:cession_party,cin';
-    
+            $cin = 'required|numeric|digits:12|unique:cession_natural_person,cin';
+            $address = 'required|string';
+            
             if ($isUpdate) {
-                $cessionParty = CessionLender::find($idCessionLender, ['id_cession_party']);
-                $cin = 'required|numeric|digits:12|unique:cession_party,cin,'. $cessionParty->id_cession_party;
+                $cessionNaturalPerson = CessionLender::find($idCessionLender, ['id_cession_natural_person']);
+                $cin = 'required|numeric|digits:12|unique:cession_natural_person,cin,'. $cessionNaturalPerson->id_cession_natural_person;
+                
+                if ($this->input('new_address') === false) {
+                    $address = 'required|numeric';
+                } 
             }
 
             return [
@@ -43,29 +48,29 @@ class CessionLenderRequest extends FormRequest
                 'last_name' => 'required|string',
                 'first_name' => 'required|string',
                 'cin' => $cin,
-                'address' => 'required|string',
+                'address' => $address,
                 'gender' => 'required|string',
             ];
         } else {
-            // $name = 'required|string|unique:cession_entity,name';
+            // $name = 'required|string|unique:cession_legal_person,name';
             
             $nameRule = [
                 'required',
                 'string',
-                Rule::unique('cession_entity', 'name')
+                Rule::unique('cession_legal_person', 'name')
                     ->where(fn ($query) => $query->where('id_tpi', $this->tpi))
             ];
 
             if ($isUpdate) {
-                $cessionEntity = CessionLender::find($idCessionLender, ['id_cession_entity']);
-                // $name = 'required|string|unique:cession_entity,name,'. $cessionEntity->id_cession_entity;
+                $cessionLegalPerson = CessionLender::find($idCessionLender, ['id_cession_legal_person']);
+                // $name = 'required|string|unique:cession_legal_person,name,'. $cessionLegalPerson->id_cession_legal_person;
 
                 $nameRule = [
                     'required',
                     'string',
-                    Rule::unique('cession_entity', 'name')
+                    Rule::unique('cession_legal_person', 'name')
                         ->where(fn ($query) => $query->where('id_tpi', $this->tpi))
-                        ->ignore($cessionEntity?->id_cession_entity)
+                        ->ignore($cessionLegalPerson?->id_cession_legal_person)
                 ];
             }
 

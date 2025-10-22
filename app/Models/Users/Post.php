@@ -32,7 +32,7 @@ class Post extends Model
     public const POST_COLORS = [
         'magistrat'=> '#A855F7',
         'greffier'=> '#06B6D4',
-        'ministere'=> '#84cc16'
+        'admin_local'=> '#84cc16'
     ];
 
     public function getPostColorAttribute()

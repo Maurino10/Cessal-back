@@ -20,15 +20,20 @@ class CessionBorrower extends Model
         'salary_amount',
         'remark',
         'id_cession',
-        'id_cession_party',
+        'id_cession_natural_person',
+        'id_cession_natural_person_address',
     ];
 
     public function cession() {
         return $this->belongsTo(Cession::class);
     }
 
-    public function party() {
-        return $this->belongsTo(CessionParty::class, 'id_cession_party');
+    public function naturalPerson() {
+        return $this->belongsTo(CessionNaturalPerson::class, 'id_cession_natural_person');
+    }
+
+    public function naturalPersonAddress() {
+        return $this->belongsTo(CessionNaturalPersonAddress::class, 'id_cession_natural_person_address');
     }
 
     public function quota() {

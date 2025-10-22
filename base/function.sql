@@ -76,11 +76,15 @@
 
 -- ------------------------------------- DROP TABLE 
 
-    DROP TABLE cession_borrower_quota CASCADE;
+    DROP TABLE cession_provision CASCADE;
+    DROP TABLE cession_reference CASCADE;
     DROP TABLE cession_justificatif CASCADE;
+    DROP TABLE cession_borrower_quota CASCADE;
     DROP TABLE cession_borrower CASCADE;
     DROP TABLE cession_lender CASCADE;
-    DROP TABLE cession_party CASCADE;
+    DROP TABLE cession_natural_person_address CASCADE;
+    DROP TABLE cession_natural_person CASCADE;
+    DROP TABLE cession_legal_person CASCADE;
     DROP TABLE cession_ordonnance CASCADE;
     DROP TABLE cession_magistrat CASCADE;
     DROP TABLE cession CASCADE;
@@ -115,8 +119,8 @@
     TRUNCATE TABLE cession_justificatif CASCADE;
     TRUNCATE TABLE cession_borrower CASCADE;
     TRUNCATE TABLE cession_lender CASCADE;
-    TRUNCATE TABLE cession_party CASCADE;
-    TRUNCATE TABLE cession_entity CASCADE;
+    TRUNCATE TABLE cession_natural_person CASCADE;
+    TRUNCATE TABLE cession_legal_person CASCADE;
     TRUNCATE TABLE cession_ordonnance CASCADE;
     TRUNCATE TABLE cession_magistrat CASCADE;
     TRUNCATE TABLE cession CASCADE;
@@ -144,3 +148,14 @@
     ALTER SEQUENCE profil_seq RESTART WITH 1;                    
     ALTER SEQUENCE users_seq RESTART WITH 1;      
     ALTER SEQUENCE inscription_id_seq RESTART WITH 1;               
+
+    ALTER SEQUENCE cession_borrower_id_seq RESTART WITH 1;                
+    ALTER SEQUENCE cession_borrower_quota_id_seq RESTART WITH 1;          
+    ALTER SEQUENCE cession_id_seq RESTART WITH 1;                         
+    ALTER SEQUENCE cession_legal_person_id_seq RESTART WITH 1;            
+    ALTER SEQUENCE cession_lender_id_seq RESTART WITH 1;                  
+    ALTER SEQUENCE cession_magistrat_id_seq RESTART WITH 1;               
+    ALTER SEQUENCE cession_natural_person_address_id_seq RESTART WITH 1;  
+    ALTER SEQUENCE cession_natural_person_id_seq RESTART WITH 1;          
+    ALTER SEQUENCE cession_ordonnance_id_seq RESTART WITH 1;              
+    ALTER SEQUENCE cession_seq RESTART WITH 1;                            

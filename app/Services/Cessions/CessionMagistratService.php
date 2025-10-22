@@ -41,7 +41,7 @@ class CessionMagistratService {
     public function findAllCessionByMagistrat($idUser) {
 
         $cessions = CessionMagistrat::
-            with(['cession.lenders.party', 'cession.borrowers.party', 'cession.borrowers.quota', 'cession.justificatifs', 'user.profil', 'user.post', 'user.tpi', 'cession.ordonnance'])
+            with(['user.profil', 'user.post', 'user.tpi', 'cession.ordonnance'])
             ->where('id_user', $idUser)
             ->get();
 

@@ -23,7 +23,6 @@ class OrdonnanceController extends Controller
         $this->cessionOrdonnanceService = $cessionOrdonnanceService;
     }
 
-    // ------------------------------- ------------------------------- ------------------------------- Cession Justificatif
     public function storeCessionOrdonnance($idCession, CessionOrdonnanceRequest $request)
     {
         try {

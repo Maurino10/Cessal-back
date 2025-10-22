@@ -115,7 +115,7 @@ Route::middleware('auth:admin')->group(function () {
 
     Route::controller(ProvisionController::class)->group(function () {
         Route::post('/provisions', 'storeCessionProvision');
-        Route::get('/provisions', 'getCessionProvision');
+        Route::get('/provisions', 'getAllCessionProvision');
         Route::put('/provisions/{idCessionProvision}', 'editCessionProvision');
     });
     // Route::controller(CessionController::class)->group(function () {
@@ -141,7 +141,7 @@ Route::middleware(['auth:user'])->group(function () {
             // Route::get('/greffier/cessions/temp/{idUser}', 'getTempCession');
             // Route::delete('/greffier/cessions/temp/{idUser}', 'deleteTempCession');
 
-            Route::post('/greffier/cessions/{idCession}/signed', 'signCession');
+            Route::post('/greffier/cessions/{idCession}/signed', 'cessionIsSigned');
         });
         
         // --------------------------------------------------------------------------- Cession Justificatifs
@@ -166,9 +166,10 @@ Route::middleware(['auth:user'])->group(function () {
             Route::post('/greffier/cessions/{idCession}/lenders', 'storeCessionLender');
             Route::post('/greffier/cessions/{idCession}/lenders/exists', 'storeCessionLenderExists');
             Route::post('/greffier/cessions/{idCession}/lenders/exists/new-address', 'storeCessionLenderExistsNewAddress');
-            Route::post('/greffier/cessions/{idCession}/lenders/entity/exists', 'storeCessionLenderEntityExists');
+            Route::post('/greffier/cessions/{idCession}/lenders/entity/exists', 'storeCessionLenderLegalPersonExists');
             Route::get('/greffier/cessions/{idCession}/lenders', 'getAllCessionLenderByCession');
             Route::put('/greffier/cessions/{idCession}/lenders/{idCessionLender}', 'editCessionLender');
+            Route::put('/greffier/cessions/{idCession}/lenders/{idCessionLender}/new-address', 'editCessionLenderNewAddress');
             Route::delete('/greffier/cessions/{idCession}/lenders/{idCessionLender}', 'removeCessionLender');
         });
 
@@ -181,6 +182,7 @@ Route::middleware(['auth:user'])->group(function () {
             Route::get('/greffier/cessions/{idCession}/borrowers/treaty', 'getAllCessionBorrowerHaveQuotaByCession');
             Route::get('/greffier/cessions/{idCession}/borrowers/{idCessionBorrower}', 'getCessionBorrower');
             Route::put('/greffier/cessions/{idCession}/borrowers/{idCessionBorrower}', 'editCessionBorrower');
+            Route::put('/greffier/cessions/{idCession}/borrowers/{idCessionBorrower}/new-address', 'editCessionBorrowerNewAddress');
             Route::delete('/greffier/cessions/{idCession}/borrowers/{idCessionBorrower}', 'removeCessionBorrower');
             Route::get('/greffier/cessions/{idCession}/borrowers/{idCessionBorrower}/references/{idCessionReference}/export-declaration', 'generateDeclaration');
         });
@@ -191,12 +193,12 @@ Route::middleware(['auth:user'])->group(function () {
         });
 
         Route::controller(PersonController::class)->group(function () {
-            Route::get('/cession-party/{cin}/check', 'checkCIN');
-            Route::get('/cession-entity/tpi/{idTPI}', 'getEntityByTPI');
+            Route::get('/cession-natural_person/{cin}/check', 'checkCIN');
+            Route::get('/cession-natural_person/{idCessionNaturalPerson}', 'getAllAddressCessionNaturalPerson');
+            Route::get('/cession-legal_person/tpi/{idTPI}', 'getEntityByTPI');
         });
 
     });
-
 
     Route::middleware('role:magistrat')->group(function () {
 
@@ -237,6 +239,33 @@ Route::middleware(['auth:user'])->group(function () {
     });
 
 
+    Route::middleware('role:admin_local')->group(function () {
+
+        // ------------------------------------------------------------------------------- Cession Lender
+        Route::controller(LenderController::class)->group(function () {
+            Route::get('/administrateur/local/cessions/{idCession}/lenders', 'getAllCessionLenderByCession');
+        });
+
+        // ------------------------------------------------------------------------------- Cession Borrower
+        Route::controller(BorrowerController::class)->group(function (): void {
+            Route::get('/administrateur/local/cessions/{idCession}/borrowers', 'getAllCessionBorrowerByCession');
+        });
+
+        Route::controller(JustificatifController::class)->group(function () {
+            Route::get('/administrateur/local/cessions/{idCession}/justificatifs', 'getAllCessionJustificatifByCession');
+            Route::get('/administrateur/local/cessions/{idCession}/justificatifs/{idCessionJustificatif}', 'showCessionJustificatif');
+        });
+
+        Route::controller(CessionController::class)->group(function () {
+            Route::get('/administrateur/local/cessions/{idCession}', 'getCession');
+            Route::get('/administrateur/local/tpi/{idTPI}/cessions', 'getAllCessionByTPI');
+            Route::get('/administrateur/local/tpi/{idTPI}/cessions/filter', 'filterCessionByTPI');
+            Route::get('/administrateur/local/tpi/{idTPI}/cessions/export-excel', 'exportExcelCessionByTPI');
+            Route::get('/administrateur/local/tpi/{idTPI}/cessions/export-pdf', 'exportPdfCessionByTPI');
+
+        });
+    });
+
     Route::middleware('role:ministere')->group(function () {
 
         // ------------------------------------------------------------------------------- Cession Lender
@@ -256,7 +285,7 @@ Route::middleware(['auth:user'])->group(function () {
 
         Route::controller(CessionController::class)->group(function () {
             Route::get('/ministere/cessions/{idCession}', 'getCession');
-            Route::get('/ministere/tpi/{idTPI}/cessions', 'getAllCessionByTPI');
+            Route::get('/ministere/cessions', 'getAllCession');
             Route::get('/ministere/tpi/{idTPI}/cessions/filter', 'filterCessionByTPI');
             Route::get('/ministere/tpi/{idTPI}/cessions/export-excel', 'exportExcelCessionByTPI');
             Route::get('/ministere/tpi/{idTPI}/cessions/export-pdf', 'exportPdfCessionByTPI');

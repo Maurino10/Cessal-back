@@ -16,12 +16,12 @@ class PersonController extends Controller {
     }
 
     public function checkCIN ($cin) {
-        $party = $this->cessionPersonService->findCINInCessionParty($cin);
+        $naturalPerson = $this->cessionPersonService->findCINInCessionNaturalPerson($cin);
 
-        if ($party) {
+        if ($naturalPerson) {
             return response()->json([
                 'exists' => true,
-                'party' => $party
+                'natural_person' => $naturalPerson
             ]);
         }
 
@@ -29,10 +29,18 @@ class PersonController extends Controller {
     }
 
     public function getEntityByTPI ($idTPI) {
-        $entities = $this->cessionPersonService->findEntityByTPI($idTPI);
+        $legalPersons = $this->cessionPersonService->findLegalPersonByTPI($idTPI);
 
         return response()->json([
-            'entities' => $entities
+            'legal_persons' => $legalPersons
+        ]);
+    }
+
+    public function getAllAddressCessionNaturalPerson($idCessionNaturalPerson) {
+        $addresses = $this->cessionPersonService->findAllAddressCessionNaturalPerson($idCessionNaturalPerson);
+
+        return response()->json([
+            'addresses' => $addresses
         ]);
     }
 }

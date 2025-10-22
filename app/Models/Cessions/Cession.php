@@ -24,6 +24,7 @@ class Cession extends Model
         'reimbursed_amount',
         'date_cession',
         'status_cession',
+        'signed',
         'id_tpi',
         'id_user',
     ];
@@ -64,9 +65,8 @@ class Cession extends Model
         1 => 'En cours de traitement',
         2 => 'Acceptée',
         3 => 'Refusée',
-        4 => 'Signée',
-        5 => 'En cours d\'exécution',
-        6 => 'Clôturée',
+        4 => 'En cours d\'exécution',
+        5 => 'Clôturée',
     ];
 
     public const STATUS_COLORS = [
@@ -74,9 +74,8 @@ class Cession extends Model
         1 => '#0D6EFD', // bleu
         2 => '#11bd6dff', // vert
         3 => '#DC3545', // rouge
-        4 => '#bd07ffff', // jaune/orangé
-        5 => '#FFC107', // jaune/orangé
-        6 => '#20C997', // turquoise
+        4 => '#FFC107', // jaune/orangé
+        5 => '#20C997', // turquoise
     ];
 
     // Accessor pour obtenir le libellé

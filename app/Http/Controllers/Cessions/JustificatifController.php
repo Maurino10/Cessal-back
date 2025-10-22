@@ -22,7 +22,6 @@ class JustificatifController extends Controller
         $this->cessionJustificatifService = $cessionJustificatifService;
     }
 
-    // ------------------------------- ------------------------------- ------------------------------- Cession Justificatif
     public function storeCessionJustificatifs($idCession, Request $request)
     {
         try {

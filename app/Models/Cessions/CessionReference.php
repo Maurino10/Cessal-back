@@ -21,7 +21,6 @@ class CessionReference extends Model
         'numero_feuillet',
         'numero_repertoire',
         'date',
-        'provision',
         'id_cession_borrower',
     ];
 

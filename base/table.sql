@@ -111,96 +111,91 @@ CREATE TABLE users (
 );
 
 
-CREATE SEQUENCE cession_seq;
 CREATE TABLE cession (
-    id VARCHAR DEFAULT CONCAT('CES', LPAD(NEXTVAL('cession_seq')::TEXT, 12, '0')) PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     numero_dossier VARCHAR UNIQUE NOT NULL,
     date_contrat TIMESTAMP NOT NULL,
     request_subject TEXT NOT NULL,
     reimbursed_amount NUMERIC(10, 2) NOT NULL,
     date_cession TIMESTAMP NOT NULL,
     status_cession NUMERIC(1) DEFAULT 0,
+    signed SMALLINT DEFAULT 0,
 
     id_tpi VARCHAR NOT NULL REFERENCES tpi(id),
     id_user VARCHAR NOT NULL REFERENCES users(id) -- Greffier
-);
--- ALTER TABLE cession ADD COLUMN date_contrat TIMESTAMP;
--- ALTER TABLE cession ALTER COLUMN date_contrat SET NOT NULL;
-
-CREATE TABLE cession_magistrat (
-    id SERIAL PRIMARY KEY,
-
-    id_cession VARCHAR NOT NULL REFERENCES cession(id),
-    id_user VARCHAR NOT NULL REFERENCES users(id) -- Magistrat
 );
 
 CREATE TABLE cession_ordonnance (
     id SERIAL PRIMARY KEY,
     numero_ordonnance VARCHAR UNIQUE,
 
-    id_cession VARCHAR NOT NULL REFERENCES cession(id)
+    id_cession INT NOT NULL REFERENCES cession(id)
 );
 
-CREATE TABLE cession_party (
+CREATE TABLE cession_magistrat (
+    id SERIAL PRIMARY KEY,
+
+    id_cession INT NOT NULL REFERENCES cession(id),
+    id_user VARCHAR NOT NULL REFERENCES users(id) -- Magistrat
+);
+
+
+CREATE TABLE cession_natural_person (
     id SERIAL PRIMARY KEY,
     last_name VARCHAR,
     first_name VARCHAR,
-    -- address VARCHAR NOT NULL,
     cin NUMERIC(12) UNIQUE,
 
     id_gender VARCHAR NOT NULL REFERENCES gender(id)
 );  
 
-CREATE TABLE cession_party_address (
+CREATE TABLE cession_natural_person_address (
     id SERIAL PRIMARY KEY,
     address VARCHAR NOT NULL,
-    date_address TIMESTAMP NOT NULL,
 
-    id_cession_party INT NOT NULL REFERENCES cession_party(id)
+    id_cession_natural_person INT NOT NULL REFERENCES cession_natural_person(id)
 );
 
-CREATE TABLE cession_entity (
+CREATE TABLE cession_legal_person (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
-    address VARCHAR NOT NULL
+    address VARCHAR NOT NULL,
 
-    id_tpi VARCHAR NOT NULL REFERENCES tpi(id)
+    id_tpi VARCHAR NOT NULL REFERENCES tpi(id),
+    CONSTRAINT unique_name_address_per_tpi UNIQUE (name, address, id_tpi)
 );
-ALTER TABLE cession_entity
-ADD CONSTRAINT unique_name_address_per_tpi UNIQUE (name, address, id_tpi);
 
 
 CREATE TABLE cession_lender (
     id SERIAL PRIMARY KEY,
     
-    id_cession VARCHAR NOT NULL REFERENCES cession(id),
-    id_cession_party INT NOT NULL REFERENCES cession_party(id),
-    id_cession_entity INT REFERENCES cession_entity(id),
-    type VARCHAR(8),
+    id_cession INT NOT NULL REFERENCES cession(id),
+    id_cession_natural_person INT REFERENCES cession_natural_person(id),
+    id_cession_legal_person INT REFERENCES cession_legal_person(id),
+    id_cession_natural_person_address INT REFERENCES cession_natural_person_address(id),
+    type VARCHAR(15) CHECK (type IN ('natural_person', 'legal_person')),
 
-    CONSTRAINT check_party_or_entity CHECK (
-        (id_cession_party IS NOT NULL) OR (id_cession_entity IS NOT NULL)
+    CONSTRAINT check_natural_or_legal_person CHECK (
+        (id_cession_natural_person IS NOT NULL AND id_cession_legal_person IS NULL) OR (id_cession_natural_person IS NULL AND id_cession_legal_person IS NOT NULL)
+    ),
+
+    CONSTRAINT check_address_for_natural_person CHECK (
+        (id_cession_natural_person IS NULL) OR 
+        (id_cession_natural_person IS NOT NULL AND id_cession_natural_person_address IS NOT NULL)
     )
 );
+
 
 CREATE TABLE cession_borrower (
     id SERIAL PRIMARY KEY,
     salary_amount NUMERIC(10, 2) NOT NULL, -- montant revenu
     remark TEXT, -- Observation
 
-    id_cession VARCHAR NOT NULL REFERENCES cession(id),
-    id_cession_party INT NOT NULL REFERENCES cession_party(id)
+    id_cession INT NOT NULL REFERENCES cession(id),
+    id_cession_natural_person INT NOT NULL REFERENCES cession_natural_person(id),
+    id_cession_natural_person_address INT REFERENCES cession_natural_person_address(id)
 );
 
-CREATE TABLE cession_justificatif (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL,      -- nom du fichier uploadé
-    path VARCHAR NOT NULL,            -- chemin dans storage
-    type VARCHAR,                       -- mime type (pdf, jpg, png...)
-    size BIGINT,                      -- taille en octets
-
-    id_cession VARCHAR NOT NULL REFERENCES cession(id)
-);
 
 CREATE TABLE cession_borrower_quota (
     id SERIAL PRIMARY KEY,
@@ -210,9 +205,20 @@ CREATE TABLE cession_borrower_quota (
     id_cession_borrower INT NOT NULL REFERENCES cession_borrower(id)
 );
 
+CREATE TABLE cession_justificatif (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR NOT NULL,      -- nom du fichier uploadé
+    path VARCHAR NOT NULL,            -- chemin dans storage
+    type VARCHAR,                       -- mime type (pdf, jpg, png...)
+    size BIGINT,                      -- taille en octets
+
+    id_cession INT NOT NULL REFERENCES cession(id)
+);
+
 CREATE TABLE cession_provision (
     id SERIAL PRIMARY KEY,
-    provision_amount NUMERIC(6, 2) NOT NULL 
+    provision_amount NUMERIC(10, 2) NOT NULL,
+    date_provision TIMESTAMP NOT NULL
 );
 
 CREATE TABLE cession_reference (
@@ -221,11 +227,9 @@ CREATE TABLE cession_reference (
     numero_feuillet VARCHAR(15) NOT NULL UNIQUE,
     numero_repertoire VARCHAR(15) NOT NULL UNIQUE,
     date TIMESTAMP NOT NULL,
-    provision NUMERIC(10, 2) NOT NULL,
 
     id_cession_borrower INT NOT NULL REFERENCES cession_borrower(id)
 );
-ALTER TABLE cession_reference ADD COLUMN provision NUMERIC(10, 2);
 
 CREATE TABLE temp_tpi (
     id SERIAL PRIMARY KEY,

@@ -2,7 +2,7 @@
 
 namespace App\Models\Users;
 
-use App\Models\Cessions\CessionParty;
+use App\Models\Cessions\CessionNaturalPerson;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -29,8 +29,8 @@ class Gender extends Model
         return $this->hasMany(Profil::class, 'id_gender');
     }
 
-    public function cessionParty() 
+    public function cessionNaturalPerson() 
     {
-        return $this->hasMany(CessionParty::class, 'id_gender');
+        return $this->hasMany(CessionNaturalPerson::class, 'id_gender');
     }
 }

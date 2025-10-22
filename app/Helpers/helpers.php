@@ -31,12 +31,12 @@ function appelation($person) {
     return $appelations[$person->gender->name] .' '. $person->last_name .' '. $person->first_name;
 }
 
-function formattedDate ($date) {
+function formattedDate ($date, $format) {
     // Créer un objet Carbon
     $carbonDate = Carbon::parse($date);
 
     // Formatter en français
-    $formatted = $carbonDate->locale('fr')->isoFormat('D MMM YYYY');
+    $formatted = $carbonDate->locale('fr')->isoFormat($format);
 
     return $formatted; // 21 sept 2025
 }

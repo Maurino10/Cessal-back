@@ -21,7 +21,6 @@ class BorrowerQuotaController extends Controller
     }
 
 
-    // ------------------------------- ------------------------------- ------------------------------- Cession Justificatif
     public function storeCessionBorrowerQuota($idCession, $idCessionBorrower, CessionBorrowerQuotaRequest $request){
         
         $cession = CessionMagistrat::where('id_cession', $idCession)->first();

@@ -14,7 +14,6 @@ class CessionReferenceService {
             'numero_feuillet' => $numeroFeuillet,
             'numero_repertoire' => $numeroRepertoire,
             'date' => $date,
-            'provision' => CessionProvision::all()->first()->provision_amount,
             'id_cession_borrower' => $idCessionBorrower,
         ]);
 

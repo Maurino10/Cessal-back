@@ -3,7 +3,7 @@
 namespace App\Models\Instances;
 
 use App\Models\Cessions\Cession;
-use App\Models\Cessions\CessionEntity;
+use App\Models\Cessions\CessionLegalPerson;
 use App\Models\Territories\District;
 use App\Models\Territories\Province;
 use App\Models\Territories\Region;
@@ -55,6 +55,6 @@ class Tpi extends Model
     }
 
     public function entities() {
-        return $this->hasMany(CessionEntity::class,'id_tpi');
+        return $this->hasMany(CessionLegalPerson::class,'id_tpi');
     }
 }

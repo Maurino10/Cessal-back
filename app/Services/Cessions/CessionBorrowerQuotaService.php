@@ -32,6 +32,7 @@ class CessionBorrowerQuotaService
 
         return $quota;
     }
+    
     public function deleteCessionBorrowerQuota($idCessionBorrowerQuota)
     {
         $quota = CessionBorrowerQuota::findOrFail($idCessionBorrowerQuota);

@@ -5,17 +5,21 @@ namespace App\Http\Controllers\Cessions;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cessions\CessionLenderRequest;
 use App\Models\Cessions\Cession;
-use App\Services\Cessions\CessionPersonService;
+use App\Services\Cessions\CessionLenderService;
+use App\Services\Cessions\CessionNaturalPersonService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 
 class LenderController extends Controller {
-    protected $cessionPersonService;
+    protected $cessionLenderService;
 
-    public function __construct(CessionPersonService $cessionPersonService) {
-        $this->cessionPersonService = $cessionPersonService;
+    protected $cessionNaturalPersonService;
+
+    public function __construct(CessionLenderService $cessionLenderService, CessionNaturalPersonService $cessionNaturalPersonService) {
+        $this->cessionLenderService = $cessionLenderService;
+        $this->cessionNaturalPersonService = $cessionNaturalPersonService;
     }
 
     public function storeCessionLender ($idCession, CessionLenderRequest $request) {
@@ -28,16 +32,17 @@ class LenderController extends Controller {
 
         $lender = null;
 
-        if ($data['type'] === 'person') {
-            $lender = $this->cessionPersonService->saveCessionLender(
+        if ($data['type'] === 'natural_person') {
+            $lender = $this->cessionLenderService->saveCessionLenderNaturalPerson(
                 $data['last_name'], 
                 $data['first_name'], 
                 $data['cin'],
+                $data['address'],
                 $data['gender'],
                 $idCession
             );
         } else {
-            $lender = $this->cessionPersonService->saveCessionLenderEntity(
+            $lender = $this->cessionLenderService->saveCessionLenderLegalPerson(
                 $data['name'],
                 $data['address'],
                 $data['tpi'],
@@ -58,12 +63,14 @@ class LenderController extends Controller {
             $this->authorize('store', $cession);
             
             $data = $request->validate([
-                'party' => 'required|numeric'
+                'natural_person' => 'required|numeric',
+                'natural_person_address' => 'required|numeric',
             ]);
             
-            $lender = $this->cessionPersonService->saveCessionLenderExists(
+            $lender = $this->cessionLenderService->saveCessionLenderNaturalPersonExists(
                 $idCession,
-                $data['party'],
+                $data['natural_person'],
+                $data['natural_person_address'],
             );
     
     
@@ -84,21 +91,17 @@ class LenderController extends Controller {
             $this->authorize('store', $cession);
             
             $data = $request->validate([
-                'party' => 'required|numeric',
+                'natural_person' => 'required|numeric',
                 'address' => 'required|string'
             ], [
                 'address.required' => 'L’adresse est obligatoire.',
                 'address.string' => 'L’adresse doit être une chaîne de caractères.',
             ]);
             
-            $lender = $this->cessionPersonService->saveCessionLenderExists(
+            $lender = $this->cessionLenderService->saveCessionLenderNaturalPersonExistsNewAddress(
                 $idCession,
-                $data['party'],
-            );
-    
-            $address = $this->cessionPersonService->saveCessionPartyAddress(
-                $data['address'],
-                $data['party']
+                $data['natural_person'],
+                $data['address']
             );
 
             return response()->json([
@@ -111,19 +114,19 @@ class LenderController extends Controller {
         }
     }
 
-    public function storeCessionLenderEntityExists ($idCession, Request $request) {
+    public function storeCessionLenderLegalPersonExists ($idCession, Request $request) {
         try {
             $cession = Cession::findOrFail($idCession);
     
             $this->authorize('store', $cession);
             
             $data = $request->validate([
-                'party' => 'required|numeric'
+                'natural_person' => 'required|numeric'
             ]);
             
-            $lender = $this->cessionPersonService->saveCessionLenderEntityExists(
+            $lender = $this->cessionLenderService->saveCessionLenderLegalPersonExists(
                 $idCession,
-                $data['party'],
+                $data['natural_person'],
             );
     
     
@@ -146,22 +149,45 @@ class LenderController extends Controller {
 
         $lender = null;
 
-        if ($data['type'] === 'person') {
-            $lender = $this->cessionPersonService->updateCesssionLender(
+        if ($data['type'] === 'natural_person') {
+            $lender = $this->cessionLenderService->updateCesssionLenderNaturalPerson(
                 $idCessionLender,
                 $data['last_name'], 
                 $data['first_name'], 
-                $data['address'], 
                 $data['cin'],
                 $data['gender'],
+                $data['address'], 
             );
         } else {
-            $lender = $this->cessionPersonService->updateCessionLenderEntity(
+            $lender = $this->cessionLenderService->updateCessionLenderLegalPerson(
                 $idCessionLender,
                 $data['name'], 
                 $data['address'], 
             );
         }
+
+        return response()->json([
+            'lender' => $lender
+        ]);
+    }
+
+    public function editCessionLenderNewAddress ($idCession, $idCessionLender, CessionLenderRequest $request) {
+        $cession = Cession::findOrFail($idCession);
+
+        $this->authorize('update', $cession);
+
+        $data = $request->validated();
+
+        $lender = null;
+
+        $lender = $this->cessionLenderService->updateCesssionLenderNaturalPersonNewAddress(
+            $idCessionLender,
+            $data['last_name'], 
+            $data['first_name'], 
+            $data['cin'],
+            $data['address'], 
+            $data['gender'],
+        );
 
         return response()->json([
             'lender' => $lender
@@ -175,7 +201,7 @@ class LenderController extends Controller {
 
         $this->authorize('delete', $cession);
         
-        $this->cessionPersonService->deleteCessionLender($idCessionLender);
+        $this->cessionLenderService->deleteCessionLender($idCessionLender);
 
         return response()->json([
             'message' => 'Demandeur supprimé avec succés'
@@ -187,7 +213,7 @@ class LenderController extends Controller {
 
         $this->authorize('view', $cession);
 
-        $lenders = $this->cessionPersonService->findAllCessionLenderByCession($idCession);
+        $lenders = $this->cessionLenderService->findAllCessionLenderByCession($idCession);
 
         return response()->json([
             'lenders' => $lenders

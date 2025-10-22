@@ -36,6 +36,18 @@ class CessionService {
         return $cession;
     }
 
+    public function updateCessionStatus ($idCession, $status) {
+        $cession = Cession::findOrFail($idCession);
+        $cession->status_cession = $status;
+        $cession->save();
+    }
+
+    public function cessionIsSigned ($idCession, $isSigned) {
+        $cession = Cession::findOrFail($idCession);
+        $cession->signed = $isSigned;
+        $cession->save();
+    }
+
     public function findCession ($idCession) {
 
         $cession = Cession::with(['ordonnance'])->findOrFail($idCession);
@@ -59,7 +71,7 @@ class CessionService {
     }
     public function findAllCession () {
 
-        $cessions = Cession::with(['lenders.party', 'borrowers.party',  'borrowers.quota', 'assignment'])->get();
+        $cessions = Cession::with(['assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'ordonnance', 'tpi'])->get();
 
         return $cessions;
     }
@@ -67,7 +79,7 @@ class CessionService {
     public function findAllCessionByUser ($idUser) {
 
         $cessions = Cession::
-            with(['lenders.party', 'borrowers.party', 'borrowers.quota', 'assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'justificatifs', 'ordonnance'])
+            with(['assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'ordonnance'])
             ->where('id_user', $idUser)
             ->get();
 
@@ -77,7 +89,7 @@ class CessionService {
     public function findAllCessionByTPI ($idTPI) {
 
         $cessions = Cession::
-            with(['lenders.party', 'borrowers.party', 'borrowers.quota', 'assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'justificatifs', 'ordonnance'])
+            with(['assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'ordonnance'])
             ->where('id_tpi', $idTPI)
             ->orderByDesc('date_cession')
             ->get();
@@ -87,7 +99,7 @@ class CessionService {
 
     public function filterCessionByTPI ($idTPI, $statut, $dateStart, $dateEnd) {
 
-        $query = Cession::with(['user.profil', 'tpi', 'lenders.party', 'borrowers.party',  'borrowers.quota', 'assignment']);
+        $query = Cession::with(['user.profil', 'tpi', 'lenders.naturalPerson', 'lenders.legalPerson', 'borrowers.naturalPerson',  'borrowers.quota', 'assignment']);
 
 
         if (!empty($statut) && $statut != 0) {
@@ -105,17 +117,42 @@ class CessionService {
         if ($dateStart !== 'null' && $dateEnd !== 'null') {
             $query->whereBetween('date_cession', [$dateStart, $dateEnd]);
         }
-
-        $query
-            ->where('id_tpi', $idTPI)
-            ->orderByDesc('date_cession');
         
-        return $query->get();
+        return $query
+            ->where('id_tpi', $idTPI)
+            ->orderByDesc('date_cession')
+            ->get();
     }
 
-    public function updateCessionStatus ($idCession, $status) {
-        $cession = Cession::findOrFail($idCession);
-        $cession->status_cession = $status;
-        $cession->save();
+    public function filterCession ($idTPI, $statut, $dateStart, $dateEnd) {
+
+        $query = Cession::with(['user.profil', 'tpi', 'lenders.naturalPerson', 'lenders.legalPerson', 'borrowers.naturalPerson', 'borrowers.quota', 'assignment']);
+
+
+        if (!empty($idTPI) && $idTPI !== 'null') {
+            $query->where('id_tpi', $idTPI);
+        }
+
+        if (!empty($statut) && $statut != 0) {
+            $query->where('status_cession', $statut);
+        }
+
+        if ($dateStart !== 'null' && $dateEnd == 'null') {
+            $query->where('date_cession', '>', $dateStart);
+        }
+
+        if ($dateStart == 'null' && $dateEnd !== 'null') {
+            $query->where('date_cession', '<', $dateEnd);
+        }
+
+        if ($dateStart !== 'null' && $dateEnd !== 'null') {
+            $query->whereBetween('date_cession', [$dateStart, $dateEnd]);
+        }
+
+        
+        return $query
+            ->orderByDesc('date_cession')
+            ->get();
     }
+
 }
