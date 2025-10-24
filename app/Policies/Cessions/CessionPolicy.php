@@ -28,6 +28,8 @@ class CessionPolicy
             return true;
         } else if ($user->isAdminLocal() && $cession->id_tpi === $user->id_tpi) {
             return true;
+        } else if ($user->isMinistere()) {
+            return true;
         } else {
             return false;
         }

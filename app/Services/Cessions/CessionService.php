@@ -71,7 +71,7 @@ class CessionService {
     }
     public function findAllCession () {
 
-        $cessions = Cession::with(['assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'ordonnance', 'tpi'])->get();
+        $cessions = Cession::with(['assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'ordonnance', 'tpi'])->orderByDesc('date_cession')->get();
 
         return $cessions;
     }
@@ -126,7 +126,7 @@ class CessionService {
 
     public function filterCession ($idTPI, $statut, $dateStart, $dateEnd) {
 
-        $query = Cession::with(['user.profil', 'tpi', 'lenders.naturalPerson', 'lenders.legalPerson', 'borrowers.naturalPerson', 'borrowers.quota', 'assignment']);
+        $query = Cession::with(['user.profil', 'tpi', 'lenders.naturalPerson', 'lenders.legalPerson', 'borrowers.naturalPerson',  'borrowers.quota', 'assignment']);
 
 
         if (!empty($idTPI) && $idTPI !== 'null') {

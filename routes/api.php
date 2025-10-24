@@ -284,11 +284,11 @@ Route::middleware(['auth:user'])->group(function () {
         });
 
         Route::controller(CessionController::class)->group(function () {
-            Route::get('/ministere/cessions/{idCession}', 'getCession');
             Route::get('/ministere/cessions', 'getAllCession');
-            Route::get('/ministere/tpi/{idTPI}/cessions/filter', 'filterCessionByTPI');
-            Route::get('/ministere/tpi/{idTPI}/cessions/export-excel', 'exportExcelCessionByTPI');
-            Route::get('/ministere/tpi/{idTPI}/cessions/export-pdf', 'exportPdfCessionByTPI');
+            Route::get('/ministere/cessions/filter', 'filterCession');
+            Route::get('/ministere/cessions/export-excel', 'exportExcelCession');
+            Route::get('/ministere/cessions/export-pdf', 'exportPdfCession');
+            Route::get('/ministere/cessions/{idCession}', 'getCession');
 
         });
     });

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cessions;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class CessionReferenceRequest extends FormRequest
 {
@@ -20,11 +21,24 @@ class CessionReferenceRequest extends FormRequest
      */
     public function rules(): array
     {
+
+        $idCessionReference = $this->route('idCessionReference') ?? null;
+        $isUpdate = !is_null($idCessionReference);
+
+        if ($isUpdate) {
+            return [
+                'numero_recu' => 'required|string|max:15|unique:cession_reference,numero_recu,' . $idCessionReference,
+                'numero_feuillet' => 'required|string|max:15|unique:cession_reference,numero_feuillet,' . $idCessionReference,
+                'numero_repertoire' => 'required|string|max:15|unique:cession_reference,numero_repertoire,' . $idCessionReference,
+                'date' => 'required|date', // tu peux ajouter après "before:tomorrow" par ex.
+            ];
+        }
+
         return [
-            'numero_recu' => 'required|string',
-            'numero_feuillet' => 'required|string',
-            'numero_repertoire' => 'required|string',
-            'date' => 'required|string',
+            'numero_recu' => 'required|string|max:15|unique:cession_reference,numero_recu',
+            'numero_feuillet' => 'required|string|max:15|unique:cession_reference,numero_feuillet',
+            'numero_repertoire' => 'required|string|max:15|unique:cession_reference,numero_repertoire',
+            'date' => 'required|date', // tu peux ajouter après "before:tomorrow" par ex.
         ];
     }
 
@@ -34,10 +48,17 @@ class CessionReferenceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'numero_recu.required' => 'Le champ est obligatoire',
-            'numero_feuillet.required' => 'Le champ est obligatoire',
-            'numero_repertoire.required' => 'Le champ est obligatoire',
-            'date.required' => 'Le champ est obligatoire',
+            'numero_recu.required' => 'Le numéro de reçu est obligatoire.',
+            'numero_recu.unique' => 'Ce numéro de reçu existe déjà.',
+
+            'numero_feuillet.required' => 'Le numéro de feuillet est obligatoire.',
+            'numero_feuillet.unique' => 'Ce numéro de feuillet existe déjà.',
+
+            'numero_repertoire.required' => 'Le numéro de répertoire est obligatoire.',
+            'numero_repertoire.unique' => 'Ce numéro de répertoire existe déjà.',
+
+            'date.required' => 'La date est obligatoire.',
+            'date.date' => 'Le format de la date est invalide.',
         ];
     }
 }

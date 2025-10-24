@@ -35,7 +35,6 @@ class CessionController extends Controller {
 // ------------------------------- ------------------------------- ------------------------------- Cession
     public function storeCession (CessionRequest $request) {
         $this->authorize('create', Cession::class);
-        
         $data = $request->validated();
 
         $idCession = $this->cessionService->saveCession(
@@ -60,8 +59,6 @@ class CessionController extends Controller {
         $this->authorize('update', $cession);
 
         $data = $request->validated();
-
-        Log::info($data);
         
         $cession = $this->cessionService->updateCession(
             $idCession, 
@@ -166,13 +163,14 @@ class CessionController extends Controller {
         
         $this->authorize('viewAny', Cession::class);
         
-        $tpi = $request->input('tpi');
+        $idTpi = $request->input('tpi');
         $statut = $request->input('statut');
         $dateStart = $request->input('dateStart');
         $dateEnd = $request->input('dateEnd');
 
-        $cessions = $this->cessionService->filterCessionByTPI(
-            $tpi, 
+
+        $cessions = $this->cessionService->filterCession(
+            $idTpi, 
             $statut,
             $dateStart,
             $dateEnd,
@@ -277,4 +275,59 @@ class CessionController extends Controller {
 
     }
 
+    public function exportExcelCession(Request $request) {
+
+        $idTpi = $request->input('tpi');
+        $statut = $request->input('statut');
+        $dateStart = $request->input('dateStart');
+        $dateEnd = $request->input('dateEnd');
+
+        $cessions = $this->cessionService->filterCession(
+            $idTpi, 
+            $statut,
+            $dateStart,
+            $dateEnd,
+        );  
+
+        
+        return Excel::download(new CessionExport($cessions), 'cessions.xlsx');
+    }
+
+    public function exportPdfCession(Request $request) {
+
+        $idTpi = $request->input('tpi');
+        $statut = $request->input('statut');
+        $dateStart = $request->input('dateStart');
+        $dateEnd = $request->input('dateEnd');
+        
+        $cessions = $this->cessionService->filterCession(
+            $idTpi, 
+            $statut,
+            $dateStart,
+            $dateEnd,
+        );
+                
+        $tpi = $cessions[0]->tpi;
+        $ca = $tpi->ca;
+
+        $status = [
+            0 => 'Toutes',
+            1 => 'En cours de traitement',
+            2 => 'Acceptée',
+            3 => 'Signée',
+            4 => 'Clôturée',
+        ];
+
+        $pdf = Pdf::loadView('cessions.cession-pdf', [
+                'tpi' => $tpi,
+                'ca' => $ca,
+                'statut' => $status[$statut],
+                'dateStart' => $dateStart !== 'null' ? formattedDate($dateStart, 'D/MM/YYYY') : '-',
+                'dateEnd' => $dateEnd !== 'null' ? formattedDate($dateEnd, 'D/MM/YYYY') : '-',
+                'cessions' => $cessions,
+            ])->setPaper('a4', 'landscape'); // Paysage
+        
+        return $pdf->download('cessions.pdf');
+
+    }
 }  
