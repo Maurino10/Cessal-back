@@ -39,8 +39,6 @@ class AuthController extends Controller
         );
         
         return response()->json([
-            // 'token' => $user->createToken('auth_token')->plainTextToken,
-            // 'user' => $user->load('profil', 'role'),
             'messages' => 'Merci de votre patience. Votre inscription est en attente d’approbation.'
         ], 201);
     }
@@ -49,7 +47,11 @@ class AuthController extends Controller
     {
         $data = $request->validated();
         
-        $profil = $this->userService->findUserByLoginAndPassword($data['login_type'], $data['login'], $data['password']);
+        $profil = $this->userService->findUserByLoginAndPassword(
+            $data['login_type'], 
+            $data['login'], 
+            $data['password']
+        );
 
         $profil->user->tokens()->delete();
         

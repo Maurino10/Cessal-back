@@ -18,15 +18,17 @@ class   AdminController extends Controller
         $this->adminService = $adminService;
     }
 
-    public function register () {    
-        $this->adminService->saveAdmin('admin', 'admin123098');
-    }
-
     public function storeAdmin (RegisterAdminRequest $request) {
 
         $data = $request->validated();
 
-        $admin = $this->adminService->saveAdmin($data['login'], $data['password']);
+        $admin = $this->adminService->saveAdmin(
+            $data['first_name'], 
+            $data['last_name'], 
+            $data['email'], 
+            $data['login'], 
+            $data['password']
+        );
 
         return response()->json([
             'admin' => $admin,
@@ -37,18 +39,39 @@ class   AdminController extends Controller
 
         $data = $request->validated();
 
-        $admin = $this->adminService->updateAdmin($idAdmin, $data['login'], $data['password']);
+        $admin = $this->adminService->updateAdmin(
+            $idAdmin, 
+            $data['first_name'], 
+            $data['last_name'], 
+            $data['email'], 
+            $data['login'], 
+            $data['password']
+        );
 
         return response()->json([
             'admin' => $admin,
         ]);
     }
 
-    public function removeAdmin ($idAdmin) {
-        $this->adminService->deleteAdmin($idAdmin);
+    public function statusAdminAticf ($idAdmin) {
+        $this->adminService->statusAdmin(
+            $idAdmin,
+            1
+        );
 
         return response()->json([
-            "message" => "L'admin a été supprimée",
+            "message" => "L'admin est aticf",
+        ]);
+    }
+
+    public function statusAdminInaticf ($idAdmin) {
+        $this->adminService->statusAdmin(
+            $idAdmin,
+            0
+        );
+
+        return response()->json([
+            "message" => "L'admin est aticf",
         ]);
     }
 
@@ -57,7 +80,11 @@ class   AdminController extends Controller
         $data = $request->validated();
         
         
-        $admin = $this->adminService->findAdminByLoginAndPassword($data['login'], $data['password']);
+        $admin = $this->adminService->findAdminByLoginAndPassword(
+            $data['login'], 
+            $data['password']
+        );
+        
         $admin->tokens()->delete();
         
         return response()->json([

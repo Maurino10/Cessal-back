@@ -18,8 +18,8 @@ class User extends Authenticatable
     protected $keyType = 'string';
     public $timestamps = false;
 
-
     protected $fillable = [
+        'status',
         'password',
         'id_profil',
         'id_post',

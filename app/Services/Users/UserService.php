@@ -5,13 +5,13 @@ namespace App\Services\Users;
 use App\Models\Users\Profil;
 use App\Models\Users\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class UserService {
 
     public function saveUser ($password, $idProfil, $idPost, $idTPI) {
         $user = User::create([
+            'status' => 1,
             'password' => Hash::make($password),
             'id_profil' => $idProfil,
             'id_post' => $idPost,
@@ -20,18 +20,13 @@ class UserService {
 
         return $user;
     }
-
-    public function updateUser ($idUser, $idPost, $idTPI) {
+   
+    public function statusUser ($idUser, $status) {
         $user = User::findOrFail($idUser);
-        $user->id_post = $idPost;
-        $user->id_tpi = $idTPI;
+        $user->status = $status;
         $user->save();
 
         return $user;
-    }    
-    public function deleteUser ($idUser) {
-        $user = User::findOrFail($idUser);
-        $user->delete();
     }
 
     public function findAllUser ($search, $idPost, $idTPI) {

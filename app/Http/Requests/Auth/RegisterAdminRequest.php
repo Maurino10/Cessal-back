@@ -22,6 +22,9 @@ class RegisterAdminRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'last_name' => 'required|string',
+            'first_name' => 'required|string',
+            'email' => 'required|email|unique:profil,email',
             'login' => 'required|unique:admin',
             'password' => 'required|string|min:8',
         ];
@@ -29,6 +32,11 @@ class RegisterAdminRequest extends FormRequest
 
     public function messages(): array {
         return [
+            'last_name.required'=> 'Le nom est obligatoire.',
+            'first_name.required'=> 'Le prénom est obligatoire.',
+            'email.required'=> 'L\'email est obligatoire',
+            'email.email'=> 'L\'email doit être un email valide',
+            'email.unique'=> 'Cet email est déjà utilisé',
             'login.required'=> 'Le login est obligatoire',
             'login.unique'=> 'Ce login est déjà utilisé',
             'password.required' => 'Le mot de passe est obligatoire.',

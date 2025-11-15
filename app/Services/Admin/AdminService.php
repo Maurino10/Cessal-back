@@ -8,8 +8,12 @@ use Illuminate\Validation\ValidationException;
 
 class AdminService {
 
-    public function saveAdmin ($login, $password) {
+    public function saveAdmin ($firstName, $lastName, $email, $login, $password) {
         $admin = Admin::create([
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $email,
+            'status' => 1,
             'login' => $login,
             'password' => Hash::make($password),
         ]);
@@ -17,8 +21,11 @@ class AdminService {
         return $admin;
     }
 
-    public function updateAdmin ($idAdmin, $login, $password) {
+    public function updateAdmin ($idAdmin, $firstName, $lastName, $email,  $login, $password) {
         $admin = Admin::findOrFail($idAdmin);
+        $admin->first_name = $firstName;
+        $admin->last_name = $lastName;
+        $admin->email = $email;
         $admin->login = $login;
         $admin->password = Hash::make($password);
         $admin->save();
@@ -26,9 +33,12 @@ class AdminService {
         return $admin;
     }
 
-    public function deleteAdmin ($idAdmin) {
+    public function statusAdmin ($idAdmin, $status) {
         $admin = Admin::find($idAdmin);
-        $admin->delete();
+        $admin->status = $status;
+        $admin->save();
+
+        return $admin;
     }
 
     public function findAdminByLoginAndPassword ($login, $password) {

@@ -78,6 +78,28 @@ class UserController extends Controller
         ]);
     }
 
+    public function statusAdminAticf ($idUser) {
+        $this->userService->statusUser(
+            $idUser,
+            1
+        );
+
+        return response()->json([
+            "message" => "L'utilisateur est aticf",
+        ]);
+    }
+
+    public function statusAdminInaticf ($idUser) {
+        $this->userService->statusUser(
+            $idUser,
+            0
+        );
+
+        return response()->json([
+            "message" => "L'utilisateur est aticf",
+        ]);
+    }
+
 // ------------------------------- ------------------------------- ------------------------------- Profil
 
     public function getProfil($idProfil) {

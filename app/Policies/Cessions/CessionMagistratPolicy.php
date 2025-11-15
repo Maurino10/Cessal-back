@@ -29,29 +29,4 @@ class CessionMagistratPolicy
     {
         return $user->id === $cessionMagistrat->id_user;
     }
-
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    // public function delete(User $user, CessionMagistrat $cessionMagistrat): bool
-    // {
-    //     //
-    // }
-
-    // /**
-    //  * Determine whether the user can restore the model.
-    //  */
-    // public function restore(User $user, CessionMagistrat $cessionMagistrat): bool
-    // {
-    //     //
-    // }
-
-    // /**
-    //  * Determine whether the user can permanently delete the model.
-    //  */
-    // public function forceDelete(User $user, CessionMagistrat $cessionMagistrat): bool
-    // {
-    //     //
-    // }
 }

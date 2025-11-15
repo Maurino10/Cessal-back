@@ -4,13 +4,13 @@ CREATE DATABASE cessal;
 CREATE SEQUENCE admin_seq;
 CREATE TABLE admin (
     id VARCHAR DEFAULT CONCAT('ADMN', LPAD(NEXTVAL('admin_seq')::TEXT, 2, '0')) PRIMARY KEY,
-    -- nom
-    -- email
-    -- statut
+    first_name VARCHAR NOT NULL,
+    last_name VARCHAR NOT NULL,
+    email VARCHAR UNIQUE NOT NULL,
+    status NUMERIC(1) NOT NULL DEFAULT 1,
     login VARCHAR UNIQUE NOT NULL,
     password TEXT NOT NULL
 );
-
 
 CREATE SEQUENCE province_seq;
 CREATE TABLE province (
@@ -101,7 +101,7 @@ CREATE SEQUENCE users_seq;
 CREATE TABLE users (
     id VARCHAR DEFAULT CONCAT('USR', LPAD(NEXTVAL('users_seq')::TEXT, 6, '0')) PRIMARY KEY,
     password TEXT NOT NULL,
-    -- statut
+    status NUMERIC(1) NOT NULL DEFAULT 1,
 
     id_profil VARCHAR NOT NULL REFERENCES profil(id),
     id_tpi VARCHAR NOT NULL REFERENCES tpi(id),
