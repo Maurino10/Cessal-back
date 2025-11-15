@@ -19,8 +19,9 @@ class CessionLender extends Model
     protected $fillable = [
         'id_cession',
         'id_cession_natural_person',
-        'id_cession_legal_person',
         'id_cession_natural_person_address',
+        'id_cession_legal_person',
+        'id_cession_legal_person_address',
         'type'
     ];
 
@@ -38,5 +39,9 @@ class CessionLender extends Model
 
     public function legalPerson() {
         return $this->belongsTo(CessionLegalPerson::class, 'id_cession_legal_person');
+    }
+
+    public function legalPersonAddress() {
+        return $this->belongsTo(CessionLegalPersonAddress::class, 'id_cession_legal_person_address');
     }
 }

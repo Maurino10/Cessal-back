@@ -12,13 +12,13 @@ use App\Http\Controllers\Cessions\LenderController;
 use App\Http\Controllers\Cessions\PersonController;
 use App\Http\Controllers\Cessions\ProvisionController;
 use App\Http\Controllers\Cessions\ReferenceController;
+use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Instances\CaController;
 use App\Http\Controllers\Instances\TpiController;
 use App\Http\Controllers\Territories\DistrictController;
 use App\Http\Controllers\Territories\ProvinceController;
 use App\Http\Controllers\Territories\RegionController;
 use App\Http\Controllers\Users\UserController;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,13 +43,17 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AdminController::class, 'login']);
 Route::post('/admin/register', [AdminController::class, 'register']);
 
-Route::get('/public/tpi', [TpiController::class, 'getAllWithoutRelations']);
+Route::get('/public/tpi', [TpiController::class, 'getAllTPIWithoutRelations']);
 Route::get('/public/posts', [UserController::class, 'getAllPost']);
 Route::get('/public/genders', [UserController::class, 'getAllGender']);
 
 // Routes protégées admin
 Route::middleware('auth:admin')->group(function () {
 
+    Route::controller(DashboardController::class)->group(function () {
+        Route::get('/dashboard', 'getDashboard');
+        Route::get('/dashboard/ca/{idCA}', 'getDetailsCa');
+    });
 
     Route::controller(ProvinceController::class)->group(function () {
         Route::post('/provinces','storeProvince');
@@ -57,6 +61,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::delete('/provinces/{idProvince}','removeProvince');
         Route::get('/provinces/{idProvince}','getProvince');
         Route::get('/provinces','getAllProvince');
+        Route::get('/province-list','getAllProvinceWithoutRelations');
     });
 
     Route::controller(CaController::class)->group(function () {
@@ -65,7 +70,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::delete('/ca/{idCA}','removeCA');
         Route::get('/ca/{idCA}','getCA');
         Route::get('/ca','getAllCA');
-        Route::get('/ca-filter','filterCA');
+        Route::get('/ca-list','getAllCAWithoutRelations');
     });
 
     Route::controller(RegionController::class)->group(function () {
@@ -74,7 +79,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::delete('/regions/{idRegion}','removeRegion');
         Route::get('/regions/{idRegion}','getRegion');
         Route::get('/regions','getAllRegion');
-        Route::get('/regions-filter','filterRegion');
+        Route::get('/region-list','getAllRegionWithoutRelations');
     });
 
     Route::controller(DistrictController::class)->group(function () {
@@ -83,7 +88,7 @@ Route::middleware('auth:admin')->group(function () {
         Route::delete('/districts/{idDistrict}','removeDistrict');
         Route::get('/districts/{idDistrict}','getDistrict');
         Route::get('/districts','getAllDistrict');
-        Route::get('/districts-filter','filterDistrict');
+        Route::get('/district-list','getAllDistrictWithoutRelations');
     });
 
     Route::controller(TpiController::class)->group(function () {
@@ -92,8 +97,8 @@ Route::middleware('auth:admin')->group(function () {
         Route::delete('/tpi/{idTPI}','removeTPI');
         Route::get('/tpi/{idTPI}','getTPI');
         Route::get('/tpi','getAllTPI');
-        Route::post('/tpi/import','importTPI');
-        Route::get('/tpi-filter','filterTPI');
+        Route::post('/instance-import','importInstance');
+        Route::get('/instance-export','exportModelInstance');
     });
 
     Route::controller(UserController::class)->group(function () {
@@ -118,9 +123,28 @@ Route::middleware('auth:admin')->group(function () {
         Route::get('/provisions', 'getAllCessionProvision');
         Route::put('/provisions/{idCessionProvision}', 'editCessionProvision');
     });
-    // Route::controller(CessionController::class)->group(function () {
-    //     Route::get('/ces')
-    // });
+
+    Route::controller(CessionController::class)->group(function () {
+        Route::get('/cessions', 'getAllCession');
+        Route::get('/cessions/export-excel', 'exportExcelCession');
+        Route::get('/cessions/export-pdf', 'exportPdfCession');
+        Route::get('/cessions/{idCession}', 'getCession');
+    });
+
+    // ------------------------------------------------------------------------------- Cession Lender
+    Route::controller(LenderController::class)->group(function () {
+        Route::get('/cessions/{idCession}/lenders', 'getAllCessionLenderByCession');
+    });
+
+    // ------------------------------------------------------------------------------- Cession Borrower
+    Route::controller(BorrowerController::class)->group(function (): void {
+        Route::get('/cessions/{idCession}/borrowers', 'getAllCessionBorrowerByCession');
+    });
+
+    Route::controller(JustificatifController::class)->group(function () {
+        Route::get('/cessions/{idCession}/justificatifs', 'getAllCessionJustificatifByCession');
+        Route::get('/cessions/{idCession}/justificatifs/{idCessionJustificatif}', 'showCessionJustificatif');
+    });
 });
 
 // Routes protégées utilisateur
@@ -135,12 +159,6 @@ Route::middleware(['auth:user'])->group(function () {
             Route::get('/greffier/cessions/{idCession}', 'getCession');
             Route::get('/greffier/cessions/{idCession}/assign', 'getCessionWithHisMagistrat');
             Route::put('/greffier/cessions/{idCession}', 'editCession');
-
-        // --------------------------------------------------------------------------- Cession Temp
-            // Route::post('/greffier/cessions/temp', 'createTempCession');
-            // Route::get('/greffier/cessions/temp/{idUser}', 'getTempCession');
-            // Route::delete('/greffier/cessions/temp/{idUser}', 'deleteTempCession');
-
             Route::post('/greffier/cessions/{idCession}/signed', 'cessionIsSigned');
         });
         
@@ -164,9 +182,10 @@ Route::middleware(['auth:user'])->group(function () {
         // ------------------------------------------------------------------------------- Cession Lender
         Route::controller(LenderController::class)->group(function () {
             Route::post('/greffier/cessions/{idCession}/lenders', 'storeCessionLender');
-            Route::post('/greffier/cessions/{idCession}/lenders/exists', 'storeCessionLenderExists');
-            Route::post('/greffier/cessions/{idCession}/lenders/exists/new-address', 'storeCessionLenderExistsNewAddress');
-            Route::post('/greffier/cessions/{idCession}/lenders/entity/exists', 'storeCessionLenderLegalPersonExists');
+            Route::post('/greffier/cessions/{idCession}/lenders/natural-person/exists', 'storeCessionLenderNaturalPersonExists');
+            Route::post('/greffier/cessions/{idCession}/lenders/natural-person/exists/new-address', 'storeCessionLenderNaturalPersonExistsNewAddress');
+            Route::post('/greffier/cessions/{idCession}/lenders/legal-person/exists', 'storeCessionLenderLegalPersonExists');
+            Route::post('/greffier/cessions/{idCession}/lenders/legal-person/exists/new-address', 'storeCessionLenderLegalPersonExistsNewAddress');
             Route::get('/greffier/cessions/{idCession}/lenders', 'getAllCessionLenderByCession');
             Route::put('/greffier/cessions/{idCession}/lenders/{idCessionLender}', 'editCessionLender');
             Route::put('/greffier/cessions/{idCession}/lenders/{idCessionLender}/new-address', 'editCessionLenderNewAddress');
@@ -193,9 +212,10 @@ Route::middleware(['auth:user'])->group(function () {
         });
 
         Route::controller(PersonController::class)->group(function () {
-            Route::get('/cession-natural_person/{cin}/check', 'checkCIN');
-            Route::get('/cession-natural_person/{idCessionNaturalPerson}', 'getAllAddressCessionNaturalPerson');
-            Route::get('/cession-legal_person/tpi/{idTPI}', 'getEntityByTPI');
+            Route::get('/cession-natural-person/{cin}/check', 'checkCIN');
+            Route::get('/cession-natural-person/{idCessionNaturalPerson}', 'getAllAddressCessionNaturalPerson');
+            Route::get('/cession-legal-person/tpi/{idTPI}', 'getLegalPersonByTPI');
+            Route::get('/cession-legal-person/{idCessionLegalPerson}', 'getAllAddressCessionLegalPerson');
         });
 
     });
@@ -259,7 +279,6 @@ Route::middleware(['auth:user'])->group(function () {
         Route::controller(CessionController::class)->group(function () {
             Route::get('/administrateur/local/cessions/{idCession}', 'getCession');
             Route::get('/administrateur/local/tpi/{idTPI}/cessions', 'getAllCessionByTPI');
-            Route::get('/administrateur/local/tpi/{idTPI}/cessions/filter', 'filterCessionByTPI');
             Route::get('/administrateur/local/tpi/{idTPI}/cessions/export-excel', 'exportExcelCessionByTPI');
             Route::get('/administrateur/local/tpi/{idTPI}/cessions/export-pdf', 'exportPdfCessionByTPI');
 
@@ -285,7 +304,6 @@ Route::middleware(['auth:user'])->group(function () {
 
         Route::controller(CessionController::class)->group(function () {
             Route::get('/ministere/cessions', 'getAllCession');
-            Route::get('/ministere/cessions/filter', 'filterCession');
             Route::get('/ministere/cessions/export-excel', 'exportExcelCession');
             Route::get('/ministere/cessions/export-pdf', 'exportPdfCession');
             Route::get('/ministere/cessions/{idCession}', 'getCession');
@@ -299,4 +317,8 @@ Route::middleware(['auth:user'])->group(function () {
 
     });
 
+    Route::controller(UserController::class)->group(function () {
+        Route::put('/users/profil/{idProfil}', 'editProfil');
+        Route::get('/users/profil/{idProfil}', 'getProfil');
+    });
 });

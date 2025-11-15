@@ -62,30 +62,34 @@ class Cession extends Model
     // Mapping des statuts
     public const STATUSES = [
         0 => 'Enregistrée',
-        1 => 'En cours de traitement',
-        2 => 'Acceptée',
-        3 => 'Refusée',
-        4 => 'En cours d\'exécution',
-        5 => 'Clôturée',
+        1 => 'En cours d\'approbation',
+        2 => 'Approuvée',
+        3 => 'Rejetée',
+        4 => 'Signée',
     ];
 
     public const STATUS_COLORS = [
-        0 => '#6C757D', // gris
-        1 => '#0D6EFD', // bleu
-        2 => '#11bd6dff', // vert
-        3 => '#DC3545', // rouge
-        4 => '#FFC107', // jaune/orangé
-        5 => '#20C997', // turquoise
+        0 => '#2196F3', // gris
+        1 => '#FB8C00', // bleu
+        2 => '#4CAF50', // vert
+        3 => '#F44336', // rouge
+        4 => '#8E24AA', // turquoise
     ];
 
-    // Accessor pour obtenir le libellé
+    // Accessor pour obtenir le libellé/
     public function getStatusLabelAttribute()
     {
+        if ($this->signed === 1) {
+            return self::STATUSES[4] ?? 'Inconnu';
+        }
         return self::STATUSES[$this->status_cession] ?? 'Inconnu';
     }
 
     public function getStatusColorAttribute()
     {
+        if ($this->signed === 1) {
+            return self::STATUS_COLORS[4] ?? '#000000';
+        }
         return self::STATUS_COLORS[$this->status_cession] ?? '#000000'; // noir par défaut
     }
 

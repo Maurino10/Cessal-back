@@ -20,7 +20,6 @@ class CessionLegalPerson extends Model
 
     protected $fillable = [
         'name',
-        'address',
         'id_tpi',
     ];
 

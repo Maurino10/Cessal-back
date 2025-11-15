@@ -28,7 +28,7 @@ class PersonController extends Controller {
         return response()->json(['exists' => false]);
     }
 
-    public function getEntityByTPI ($idTPI) {
+    public function getLegalPersonByTPI ($idTPI) {
         $legalPersons = $this->cessionPersonService->findLegalPersonByTPI($idTPI);
 
         return response()->json([
@@ -38,6 +38,14 @@ class PersonController extends Controller {
 
     public function getAllAddressCessionNaturalPerson($idCessionNaturalPerson) {
         $addresses = $this->cessionPersonService->findAllAddressCessionNaturalPerson($idCessionNaturalPerson);
+
+        return response()->json([
+            'addresses' => $addresses
+        ]);
+    }
+
+    public function getAllAddressCessionLegalPerson($idCessionLegalPerson) {
+        $addresses = $this->cessionPersonService->findAllAddressCessionLegalPerson($idCessionLegalPerson);
 
         return response()->json([
             'addresses' => $addresses

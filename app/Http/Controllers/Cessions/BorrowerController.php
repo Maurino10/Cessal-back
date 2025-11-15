@@ -9,6 +9,7 @@ use App\Services\Cessions\CessionBorrowerService;
 use App\Services\Cessions\CessionNaturalPersonService;
 use App\Services\Cessions\CessionProvisionService;
 use App\Services\Cessions\CessionReferenceService;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -255,7 +256,7 @@ class BorrowerController extends Controller {
                 if ($lender->type === 'natural_person') {
                     $naturalPerson[] =  trim($lender->naturalPerson->last_name . ' ' . $lender->naturalPerson->first_name);
                 } else {
-                    $legalPerson[] = trim($lender->legalPerson->name . ' ' . $lender->legalPerson->address);
+                    $legalPerson[] = trim($lender->legalPerson->name . ' ' . $lender->legalPersonAddress->address);
                 }
             }
 
@@ -288,6 +289,7 @@ class BorrowerController extends Controller {
                 'granted_amount_letter' => spell_money_ariary($borrower->quota->granted_amount),
                 'reimbursed_amount_number' => number_format($cession->reimbursed_amount, 0, ',', ' '),
                 'reimbursed_amount_letter' => spell_money_ariary($cession->reimbursed_amount),
+                'do_date' => Carbon::now()->format('d/m/Y')
             ]);
 
             // 🧾 Étape 2 : Sauvegarder le DOCX temporaire

@@ -4,6 +4,7 @@ namespace App\Services\Users;
 
 use App\Models\Users\Inscription;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 
@@ -38,12 +39,31 @@ class InscriptionService {
         return $inscription;
     }
 
-    public function findAllInscription () {
-        $inscriptions = Inscription::where('status', '!=', 1)
-            ->with(['gender', 'tpi', 'post'])
-            ->get();
+    public function findAllInscription ($search, $idPost, $idTPI) {
+        $inscriptions = Inscription::where('status', '!=', 1);
 
-        return $inscriptions;
+        if (!empty($idPost) && $idPost !== 'null' && $idPost !== '') {
+            $inscriptions->where('id_post', $idPost);
+        }
+
+        if (!empty($idTPI) && $idTPI !== 'null' && $idTPI !== '') {
+            $inscriptions->where('id_tpi', $idTPI);
+        }
+
+        if (!empty($search) && $search !== '') {
+            $inscriptions->where(function ($query) use ($search) {
+                $query->where('immatriculation', 'ILIKE', "%$search%")
+                    ->orWhereRaw("CONCAT(last_name, ' ', first_name) ILIKE ?", ["%$search%"])
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) ILIKE ?", ["%$search%"]);
+            });
+        }
+
+
+        return $inscriptions->with(['gender', 'tpi', 'post'])
+            ->orderBy('last_name', 'asc')
+            ->orderBy('first_name', 'asc')
+            ->paginate(10);
+
     }
 
     public function findInscription ($idInscription) {

@@ -4,6 +4,9 @@ CREATE DATABASE cessal;
 CREATE SEQUENCE admin_seq;
 CREATE TABLE admin (
     id VARCHAR DEFAULT CONCAT('ADMN', LPAD(NEXTVAL('admin_seq')::TEXT, 2, '0')) PRIMARY KEY,
+    -- nom
+    -- email
+    -- statut
     login VARCHAR UNIQUE NOT NULL,
     password TEXT NOT NULL
 );
@@ -31,7 +34,6 @@ CREATE TABLE region(
     id_province VARCHAR NOT NULL REFERENCES province(id)
 );
 
-
 CREATE SEQUENCE district_seq;
 CREATE TABLE district(
     id VARCHAR DEFAULT CONCAT('DSTRCT', LPAD(NEXTVAL('district_seq')::TEXT, 4, '0')) PRIMARY KEY,
@@ -49,7 +51,6 @@ CREATE TABLE tpi (
     id_district VARCHAR NOT NULL REFERENCES district(id)
 );
 
-
 CREATE SEQUENCE post_seq;
 CREATE TABLE post (
     id VARCHAR DEFAULT CONCAT('POST', LPAD(NEXTVAL('post_seq')::TEXT, 2, '0')) PRIMARY KEY,
@@ -57,13 +58,11 @@ CREATE TABLE post (
     role VARCHAR NOT NULL
 );
 
-
 CREATE SEQUENCE gender_seq;
 CREATE TABLE gender (
     id VARCHAR DEFAULT CONCAT('GNR', LPAD(NEXTVAL('gender_seq')::TEXT, 1, '0')) PRIMARY KEY,
     name VARCHAR NOT NULL
 );
-
 
 CREATE TABLE inscription (
     id SERIAL PRIMARY KEY,
@@ -77,9 +76,7 @@ CREATE TABLE inscription (
     password TEXT NOT NULL,
 
     date_inscription TIMESTAMP NOT NULl,
-    date_acceptation TIMESTAMP DEFAULT NULl,
     status NUMERIC(1) DEFAULT 0,
-
 
     id_gender VARCHAR NOT NULL REFERENCES gender(id),
     id_tpi VARCHAR NOT NULL REFERENCES tpi(id),
@@ -104,6 +101,7 @@ CREATE SEQUENCE users_seq;
 CREATE TABLE users (
     id VARCHAR DEFAULT CONCAT('USR', LPAD(NEXTVAL('users_seq')::TEXT, 6, '0')) PRIMARY KEY,
     password TEXT NOT NULL,
+    -- statut
 
     id_profil VARCHAR NOT NULL REFERENCES profil(id),
     id_tpi VARCHAR NOT NULL REFERENCES tpi(id),
@@ -153,35 +151,44 @@ CREATE TABLE cession_natural_person_address (
     id SERIAL PRIMARY KEY,
     address VARCHAR NOT NULL,
 
-    id_cession_natural_person INT NOT NULL REFERENCES cession_natural_person(id)
+    id_cession_natural_person INT NOT NULL REFERENCES cession_natural_person(id),
+    CONSTRAINT unique_address_per_id_cession_natural_person UNIQUE (address, id_cession_natural_person)
 );
 
 CREATE TABLE cession_legal_person (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL,
-    address VARCHAR NOT NULL,
 
     id_tpi VARCHAR NOT NULL REFERENCES tpi(id),
-    CONSTRAINT unique_name_address_per_tpi UNIQUE (name, address, id_tpi)
+    CONSTRAINT unique_name_per_tpi UNIQUE (name, id_tpi)
 );
 
+CREATE TABLE cession_legal_person_address (
+    id SERIAL PRIMARY KEY,
+    address VARCHAR NOT NULL,
+
+    id_cession_legal_person INT NOT NULL REFERENCES cession_legal_person(id),
+    CONSTRAINT unique_address_per_id_cession_legal_person UNIQUE (address, id_cession_legal_person)
+
+);
 
 CREATE TABLE cession_lender (
     id SERIAL PRIMARY KEY,
     
     id_cession INT NOT NULL REFERENCES cession(id),
     id_cession_natural_person INT REFERENCES cession_natural_person(id),
-    id_cession_legal_person INT REFERENCES cession_legal_person(id),
     id_cession_natural_person_address INT REFERENCES cession_natural_person_address(id),
+    id_cession_legal_person INT REFERENCES cession_legal_person(id),
+    id_cession_legal_person_address INT REFERENCES cession_legal_person_address(id),
     type VARCHAR(15) CHECK (type IN ('natural_person', 'legal_person')),
 
     CONSTRAINT check_natural_or_legal_person CHECK (
         (id_cession_natural_person IS NOT NULL AND id_cession_legal_person IS NULL) OR (id_cession_natural_person IS NULL AND id_cession_legal_person IS NOT NULL)
     ),
 
-    CONSTRAINT check_address_for_natural_person CHECK (
-        (id_cession_natural_person IS NULL) OR 
-        (id_cession_natural_person IS NOT NULL AND id_cession_natural_person_address IS NOT NULL)
+    CONSTRAINT check_natural_or_legal_person_address CHECK (
+        (id_cession_natural_person IS NOT NULL AND  id_cession_natural_person_address IS NOT NULL) OR 
+        (id_cession_legal_person IS NOT NULL AND id_cession_legal_person_address IS NOT NULL)
     )
 );
 
@@ -196,11 +203,10 @@ CREATE TABLE cession_borrower (
     id_cession_natural_person_address INT REFERENCES cession_natural_person_address(id)
 );
 
-
 CREATE TABLE cession_borrower_quota (
     id SERIAL PRIMARY KEY,
 
-    granted_amount NUMERIC(10, 2) NOT NULL, -- Montant accordé
+    granted_amount NUMERIC(10, 2) NOT NULL,
 
     id_cession_borrower INT NOT NULL REFERENCES cession_borrower(id)
 );
@@ -231,7 +237,7 @@ CREATE TABLE cession_reference (
     id_cession_borrower INT NOT NULL REFERENCES cession_borrower(id)
 );
 
-CREATE TABLE temp_tpi (
+CREATE TABLE temp_instance (
     id SERIAL PRIMARY KEY,
     structure_parente VARCHAR,
     structure_fille VARCHAR,

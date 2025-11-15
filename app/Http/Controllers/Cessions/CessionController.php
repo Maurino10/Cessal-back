@@ -11,18 +11,10 @@ use App\Models\Cessions\CessionMagistrat;
 use App\Services\Cessions\CessionPersonService;
 use App\Services\Cessions\CessionService;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use PhpOffice\PhpWord\IOFactory;
-use PhpOffice\PhpWord\Settings;
-use PhpOffice\PhpWord\TemplateProcessor;
 
 class CessionController extends Controller {
-
     protected $cessionService;
     protected $cessionPersonService;
     protected $cessionAssignmentService;
@@ -94,6 +86,7 @@ class CessionController extends Controller {
             'cession' => $cession
         ]);
     }
+
     public function getCessionWithAttributCanAccept ($idCession, Request $request) {
         
         $cession = $this->cessionService->findCessionWithAttributCanAccept($idCession);
@@ -109,7 +102,12 @@ class CessionController extends Controller {
 
         $this->authorize('viewAny', Cession::class);
 
-        $cessions = $this->cessionService->findAllCession();
+        $idTpi = $request->input('tpi');
+        $statut = $request->input('statut');
+        $dateStart = $request->input('dateStart');
+        $dateEnd = $request->input('dateEnd');
+
+        $cessions = $this->cessionService->findAllCession($idTpi, $statut, $dateStart, $dateEnd);
 
         return response()->json([
             'cessions' => $cessions
@@ -118,63 +116,27 @@ class CessionController extends Controller {
 
     public function getAllCessionByGreffier ($idUser, Request $request) {
 
-
         $this->authorize('viewAny', Cession::class);
+
+        $search = $request->input('search');
+        $statut = $request->input('statut');
         
-        $cessions = $this->cessionService->findAllCessionByUser($idUser);
+        $cessions = $this->cessionService->findAllCessionByGreffier($idUser, $search, $statut);
 
         return response()->json([
             'cessions' => $cessions
         ]);
     }
 
-    public function getAllCessionByTPI ($idTPI) {
+    public function getAllCessionByTPI ($idTPI, Request $request) {
         
         $this->authorize('viewAny', Cession::class);
-        
-        $cessions = $this->cessionService->findAllCessionByTPI($idTPI);
 
-        return response()->json([
-            'cessions' => $cessions
-        ]);
-    }
-
-    public function filterCessionByTPI ($idTPI, Request $request) {
-        
-        $this->authorize('viewAny', Cession::class);
-        
         $statut = $request->input('statut');
         $dateStart = $request->input('dateStart');
         $dateEnd = $request->input('dateEnd');
-
-        $cessions = $this->cessionService->filterCessionByTPI(
-            $idTPI, 
-            $statut,
-            $dateStart,
-            $dateEnd,
-        );
-
-        return response()->json([
-            'cessions' => $cessions
-        ]);
-    }
-
-    public function filterCession (Request $request) {
         
-        $this->authorize('viewAny', Cession::class);
-        
-        $idTpi = $request->input('tpi');
-        $statut = $request->input('statut');
-        $dateStart = $request->input('dateStart');
-        $dateEnd = $request->input('dateEnd');
-
-
-        $cessions = $this->cessionService->filterCession(
-            $idTpi, 
-            $statut,
-            $dateStart,
-            $dateEnd,
-        );
+        $cessions = $this->cessionService->findAllCessionByTPI($idTPI, $statut, $dateStart, $dateEnd);
 
         return response()->json([
             'cessions' => $cessions
@@ -251,26 +213,28 @@ class CessionController extends Controller {
             $dateEnd,
         );
                 
-        $tpi = $cessions[0]->tpi;
-        $ca = $tpi->ca;
 
         $status = [
-            0 => 'Toutes',
+            -1 => 'Toutes',
+            0 => 'Enregistrée',
             1 => 'En cours de traitement',
             2 => 'Acceptée',
-            3 => 'Signée',
-            4 => 'Clôturée',
+            3 => 'Refusée',
+            4 => 'Signée',
         ];
 
         $pdf = Pdf::loadView('cessions.cession-pdf', [
-                'tpi' => $tpi,
-                'ca' => $ca,
                 'statut' => $status[$statut],
                 'dateStart' => $dateStart !== 'null' ? formattedDate($dateStart, 'D/MM/YYYY') : '-',
                 'dateEnd' => $dateEnd !== 'null' ? formattedDate($dateEnd, 'D/MM/YYYY') : '-',
                 'cessions' => $cessions,
-            ])->setPaper('a4', 'landscape'); // Paysage
-        
+            ])
+            ->setPaper('a4', 'landscape') // Paysage
+            ->setWarnings(false)
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('enable_php', true);
+
         return $pdf->download('cessions.pdf');
 
     }
@@ -289,7 +253,6 @@ class CessionController extends Controller {
             $dateEnd,
         );  
 
-        
         return Excel::download(new CessionExport($cessions), 'cessions.xlsx');
     }
 
@@ -306,27 +269,39 @@ class CessionController extends Controller {
             $dateStart,
             $dateEnd,
         );
+
+        $cessions = $cessions->sort(function ($a, $b) {
+            if ($a->id_tpi === $b->id_tpi) {
+                return $b->date_cession <=> $a->date_cession;
+            }
+            return $a->id_tpi <=> $b->id_tpi;
+        })->values();
                 
-        $tpi = $cessions[0]->tpi;
-        $ca = $tpi->ca;
+
 
         $status = [
-            0 => 'Toutes',
+            -1 => 'Toutes',
+            0 => 'Enregistrée',
             1 => 'En cours de traitement',
             2 => 'Acceptée',
-            3 => 'Signée',
-            4 => 'Clôturée',
+            3 => 'Refusée',
+            4 => 'Signée',
         ];
 
         $pdf = Pdf::loadView('cessions.cession-pdf', [
-                'tpi' => $tpi,
-                'ca' => $ca,
                 'statut' => $status[$statut],
                 'dateStart' => $dateStart !== 'null' ? formattedDate($dateStart, 'D/MM/YYYY') : '-',
                 'dateEnd' => $dateEnd !== 'null' ? formattedDate($dateEnd, 'D/MM/YYYY') : '-',
                 'cessions' => $cessions,
-            ])->setPaper('a4', 'landscape'); // Paysage
-        
+            ])
+            ->setPaper('a4', 'landscape')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true)
+            ->setOption('enable_php', true)
+            ->setOption('dpi', 100)
+            ->setOption('defaultFont', 'DejaVu Sans')
+            ->setWarnings(false);
+            
         return $pdf->download('cessions.pdf');
 
     }

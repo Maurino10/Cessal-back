@@ -4,7 +4,8 @@ namespace App\Services\Cessions;
 
 use App\Models\Cessions\Cession;
 use Carbon\Carbon;
-use Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CessionService {
 
@@ -69,49 +70,160 @@ class CessionService {
 
         return $cession;
     }
-    public function findAllCession () {
+    
+    public function findAllCession ($idTPI, $statut, $dateStart, $dateEnd) {
 
-        $cessions = Cession::with(['assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'ordonnance', 'tpi'])->orderByDesc('date_cession')->get();
+        $cessions = Cession::with([
+            'assignment.user.profil', 
+            'assignment.user.post', 
+            'assignment.user.tpi', 
+            'ordonnance', 
+            'tpi'
+        ]);
 
-        return $cessions;
-    }
+        if (!empty($idTPI) && $idTPI !== 'null' && $idTPI !== '') {
+            $cessions->where('id_tpi', $idTPI);
+        }
 
-    public function findAllCessionByUser ($idUser) {
+        if ($statut != 'null' && $statut != -1 && $statut != 4) {
+            $cessions->where('status_cession', $statut);
+            $cessions->where('signed', 0);
+        }
 
-        $cessions = Cession::
-            with(['assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'ordonnance'])
-            ->where('id_user', $idUser)
-            ->get();
+        if ($statut == 4) {
+            $cessions->where('signed', 1);
+        }
 
-        return $cessions;
-    }
+        if ($dateStart !== 'null' && $dateEnd == 'null') {
+            $cessions->where('date_cession', '>=', $dateStart);
+        }
 
-    public function findAllCessionByTPI ($idTPI) {
+        if ($dateStart == 'null' && $dateEnd !== 'null') {
+            $cessions->where('date_cession', '<=', $dateEnd);
+        }
 
-        $cessions = Cession::
-            with(['assignment.user.profil', 'assignment.user.post', 'assignment.user.tpi', 'ordonnance'])
-            ->where('id_tpi', $idTPI)
+        if ($dateStart !== 'null' && $dateEnd !== 'null') {
+            $cessions->whereBetween('date_cession', [$dateStart, $dateEnd]);
+        }
+
+        return $cessions
             ->orderByDesc('date_cession')
-            ->get();
+            ->orderBy('numero_dossier')
+            ->paginate(10);
+    }
 
-        return $cessions;
+    public function findAllCessionByGreffier ($idUser, $search, $statut) {
+
+        $cessions = Cession::with([
+            'assignment.user.profil', 
+            'assignment.user.post', 
+            'assignment.user.tpi', 
+            'ordonnance'
+        ])->where('id_user', $idUser);
+        
+        if (!empty($search) && $search !== '') {
+            $cessions->where(function ($query) use ($search) {
+                $query->where('numero_dossier', 'ILIKE', "%$search%")
+                    ->orWhereHas('lenders.naturalPerson', function ($q) use ($search) {
+                        $q->where(DB::raw("CONCAT(last_name, ' ', first_name)"), 'ILIKE', "%$search%")
+                        ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'ILIKE', "%$search%");
+                    })
+                    ->orWhereHas('lenders.legalPerson', function ($q) use ($search) {
+                        $q->where('name', 'ILIKE', "%$search%");
+                    })
+                    ->orWhereHas('borrowers.naturalPerson', function ($q) use ($search) {
+                        $q->where(DB::raw("CONCAT(last_name, ' ', first_name)"), 'ILIKE', "%$search%")
+                        ->orWhere(DB::raw("CONCAT(first_name, ' ', last_name)"), 'ILIKE', "%$search%");
+                    });     
+            });
+        }
+
+        if ($statut != 'null' && $statut != -1 && $statut != 4) {
+            $cessions->where('status_cession', $statut);
+            $cessions->where('signed', 0);
+        }
+
+        if ($statut == 4) {
+            $cessions->where('signed', 1);
+        }
+
+        return $cessions
+            ->orderByDesc('date_cession')
+            ->paginate(10);
+    }
+
+    public function findAllCessionByTPI ($idTPI, $statut, $dateStart, $dateEnd) {
+
+        $cessions = Cession::with([
+            'assignment.user.profil', 
+            'assignment.user.post', 
+            'assignment.user.tpi', 
+            'ordonnance'
+        ])->where('id_tpi', $idTPI);
+
+
+        if ($statut != 'null' && $statut != -1 && $statut != 4) {
+            $cessions->where('status_cession', $statut);
+            $cessions->where('signed', 0);
+        }
+
+        if ($statut == 4) {
+            $cessions->where('signed', 1);
+        }
+
+        if ($statut == 4) {
+            $cessions->where('signed', 1);
+        }
+
+        if ($dateStart !== 'null' && $dateEnd == 'null') {
+            $cessions->where('date_cession', '>=', $dateStart);
+        }
+
+        if ($dateStart == 'null' && $dateEnd !== 'null') {
+            $cessions->where('date_cession', '<=', $dateEnd);
+        }
+
+        if ($dateStart !== 'null' && $dateEnd !== 'null') {
+            $cessions->whereBetween('date_cession', [$dateStart, $dateEnd]);
+        }
+    
+
+        return $cessions
+            ->orderByDesc('date_cession')
+            ->paginate(10);
     }
 
     public function filterCessionByTPI ($idTPI, $statut, $dateStart, $dateEnd) {
 
-        $query = Cession::with(['user.profil', 'tpi', 'lenders.naturalPerson', 'lenders.legalPerson', 'borrowers.naturalPerson',  'borrowers.quota', 'assignment']);
+        $query = Cession::with(['user.profil',
+            'tpi',
+            'lenders.naturalPerson',
+            'lenders.legalPerson',
+            'borrowers.naturalPerson',
+            'borrowers.quota',
+            'assignment'
+        ]);
 
 
-        if (!empty($statut) && $statut != 0) {
+        if ($statut != 'null' && $statut != -1 && $statut != 4) {
             $query->where('status_cession', $statut);
+            $query->where('signed', 0);
+        }
+
+        if ($statut == 4) {
+            $query->where('signed', 1);
+        }
+
+        if ($statut == 4) {
+            $query->where('signed', 1);
         }
 
         if ($dateStart !== 'null' && $dateEnd == 'null') {
-            $query->where('date_cession', '>', $dateStart);
+            $query->where('date_cession', '>=', $dateStart);
         }
 
         if ($dateStart == 'null' && $dateEnd !== 'null') {
-            $query->where('date_cession', '<', $dateEnd);
+            $query->where('date_cession', '<=', $dateEnd);
         }
 
         if ($dateStart !== 'null' && $dateEnd !== 'null') {
@@ -126,23 +238,34 @@ class CessionService {
 
     public function filterCession ($idTPI, $statut, $dateStart, $dateEnd) {
 
-        $query = Cession::with(['user.profil', 'tpi', 'lenders.naturalPerson', 'lenders.legalPerson', 'borrowers.naturalPerson',  'borrowers.quota', 'assignment']);
+        $query = Cession::with([
+            'user.profil',
+            'tpi',
+            'lenders.naturalPerson',
+            'lenders.legalPerson',
+            'borrowers.naturalPerson',
+            'borrowers.quota', 'assignment'
+        ]);
 
-
-        if (!empty($idTPI) && $idTPI !== 'null') {
+        if (!empty($idTPI) && $idTPI !== 'null' && $idTPI !== '') {
             $query->where('id_tpi', $idTPI);
         }
 
-        if (!empty($statut) && $statut != 0) {
+        if ($statut != 'null' && $statut != -1 && $statut != 4) {
             $query->where('status_cession', $statut);
+            $query->where('signed', 0);
+        }
+
+        if ($statut == 4) {
+            $query->where('signed', 1);
         }
 
         if ($dateStart !== 'null' && $dateEnd == 'null') {
-            $query->where('date_cession', '>', $dateStart);
+            $query->where('date_cession', '>=', $dateStart);
         }
 
         if ($dateStart == 'null' && $dateEnd !== 'null') {
-            $query->where('date_cession', '<', $dateEnd);
+            $query->where('date_cession', '<=', $dateEnd);
         }
 
         if ($dateStart !== 'null' && $dateEnd !== 'null') {

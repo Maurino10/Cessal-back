@@ -56,7 +56,7 @@ class LenderController extends Controller {
         ]);
     }
 
-    public function storeCessionLenderExists ($idCession, Request $request) {
+    public function storeCessionLenderNaturalPersonExists ($idCession, Request $request) {
         try {
             $cession = Cession::findOrFail($idCession);
     
@@ -84,7 +84,7 @@ class LenderController extends Controller {
         }
     }
 
-    public function storeCessionLenderExistsNewAddress ($idCession, Request $request) {
+    public function storeCessionLenderNaturalPersonExistsNewAddress ($idCession, Request $request) {
         try {
             $cession = Cession::findOrFail($idCession);
     
@@ -92,16 +92,16 @@ class LenderController extends Controller {
             
             $data = $request->validate([
                 'natural_person' => 'required|numeric',
-                'address' => 'required|string'
+                'natural_person_address' => 'required|string'
             ], [
-                'address.required' => 'L’adresse est obligatoire.',
-                'address.string' => 'L’adresse doit être une chaîne de caractères.',
+                'natural_person_address.required' => 'L’adresse est obligatoire.',
+                'natural_person_address.string' => 'L’adresse doit être une chaîne de caractères.',
             ]);
             
             $lender = $this->cessionLenderService->saveCessionLenderNaturalPersonExistsNewAddress(
                 $idCession,
                 $data['natural_person'],
-                $data['address']
+                $data['natural_person_address']
             );
 
             return response()->json([
@@ -121,12 +121,45 @@ class LenderController extends Controller {
             $this->authorize('store', $cession);
             
             $data = $request->validate([
-                'natural_person' => 'required|numeric'
+                'legal_person' => 'required|numeric',
+                'legal_person_address' => 'required|numeric',
             ]);
             
             $lender = $this->cessionLenderService->saveCessionLenderLegalPersonExists(
                 $idCession,
-                $data['natural_person'],
+                $data['legal_person'],
+                $data['legal_person_address'],
+            );
+    
+    
+            return response()->json([
+                'lender' => $lender
+            ]);
+        } catch (ValidationException $ve) {
+            return response()->json([
+                'errors' => $ve->errors()
+            ], 422);
+        }
+    }
+
+     public function storeCessionLenderLegalPersonExistsNewAddress ($idCession, Request $request) {
+        try {
+            $cession = Cession::findOrFail($idCession);
+    
+            $this->authorize('store', $cession);
+            
+            $data = $request->validate([
+                'legal_person' => 'required|numeric',
+                'legal_person_address' => 'required|string'
+            ], [
+                'legal_person_address.required' => 'L’adresse est obligatoire.',
+                'legal_person_address.string' => 'L’adresse doit être une chaîne de caractères.',
+            ]);
+            
+            $lender = $this->cessionLenderService->saveCessionLenderLegalPersonExistsNewAddress(
+                $idCession,
+                $data['legal_person'],
+                $data['legal_person_address'],
             );
     
     
@@ -158,14 +191,8 @@ class LenderController extends Controller {
                 $data['gender'],
                 $data['address'], 
             );
-        } else {
-            $lender = $this->cessionLenderService->updateCessionLenderLegalPerson(
-                $idCessionLender,
-                $data['name'], 
-                $data['address'], 
-            );
-        }
-
+        } 
+        
         return response()->json([
             'lender' => $lender
         ]);

@@ -69,12 +69,23 @@ class ProvinceController extends Controller
 
 // ------------------------------- ------------------------------- ------------------------------- Get All
 
-    public function getAllProvince() {
+    public function getAllProvince(Request $request) {
 
-        $provinces = $this->provinceService->findAllProvince();
+        $search = $request->input('search');
+
+        $provinces = $this->provinceService->findAllProvince(true, $search);
 
         return response()->json([
             "provinces"=> $provinces,
+        ]);
+    }
+
+    public function getAllProvinceWithoutRelations() {
+        
+        $provinces = $this->provinceService->findAllProvince(false, null);
+
+        return response()->json([
+            "provinces" => $provinces,
         ]);
     }
 

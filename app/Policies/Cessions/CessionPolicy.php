@@ -2,6 +2,7 @@
 
 namespace App\Policies\Cessions;
 
+use App\Models\Admin\Admin;
 use App\Models\Cessions\Cession;
 use App\Models\Users\User;
 use Illuminate\Auth\Access\Response;
@@ -12,6 +13,13 @@ class CessionPolicy
   /**
      * Determine whether the user can view any models.
      */
+
+    public function before($user) {
+        if ($user instanceof Admin) {
+            return true;
+        }
+    }
+
     public function viewAny(User $user): bool
     {
         return true;
@@ -33,7 +41,6 @@ class CessionPolicy
         } else {
             return false;
         }
-        // return ($user->id === $cession->id_user) || ($user->id === $cession->assignment->id_user) || ($user->isMinistere() && $cession->id_tpi === $user->id_tpi);
     }
 
     /**

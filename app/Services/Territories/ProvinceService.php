@@ -22,8 +22,21 @@ class ProvinceService {
         return Province::where("id", $idProvince)->delete();
     }
 
-    public function findAllProvince() {
-        return Province::all();
+    public function findAllProvince($withRelations, $search) {
+        if($withRelations) {
+    
+            if ($search !== 'null' && $search !== null && !empty($search)) {
+                $query = Province::where('name', 'ILIKE', "%$search%");
+                return $query
+                    ->orderBy('name')
+                    ->paginate(10);
+            } else {
+                return Province::orderBy('name')->paginate(10);
+            }
+    
+        } else {
+            return Province::orderBy('name')->get();
+        }
     }
 
     public function findProvince($idProvince) {

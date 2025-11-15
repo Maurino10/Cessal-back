@@ -70,24 +70,21 @@ class RegionController extends Controller
 
 // ------------------------------- ------------------------------- ------------------------------- Get All
 
-    public function getAllRegion() {
+    public function getAllRegion(Request $request) {
+        
+        $search = $request->input('search');
+        $idProvince = $request->input('province');
 
-        $regions = $this->regionService->findAllRegion();
+        $regions = $this->regionService->findAllRegion(true, $search, $idProvince);
 
         return response()->json([
             "regions"=> $regions,
         ]);
     }
 
-// ------------------------------- ------------------------------- ------------------------------- Filter
+    public function getAllRegionWithoutRelations() {
 
-    public function filterRegion(Request $request) {
-
-        $word = $request->word;
-        $idProvince = $request->province;
-
-
-        $regions = $this->regionService->filterRegion($word,$idProvince);
+        $regions = $this->regionService->findAllRegion(false,null, null);
 
         return response()->json([
             "regions"=> $regions,

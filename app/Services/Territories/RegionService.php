@@ -24,25 +24,29 @@ class RegionService {
         return Region::where("id", $idRegion)->delete();
     }
 
-    public function findAllRegion() {
-        return Region::with('province')->get();
+    public function findAllRegion($withRelations, $search, $idProvince) {
+
+        if ($withRelations) {
+            $query = Region::with('province');
+
+            if ($search !== 'null' && $search !== null &&  !empty($search)) {
+                $query = $query->where('name', 'ILIKE', "%$search%");
+            }
+
+            if ($idProvince !== 'null' && $idProvince !== null && !empty($idProvince)) {
+                $query = $query->where('id_province', $idProvince);
+            }
+
+            return $query
+                ->orderBy('name')
+                ->paginate(10);
+        } else {
+            return Region::with('province')->orderBy('name')->get();
+        }
     }
 
     public function findRegion($idRegion) {
         return Region::findOrFail($idRegion);
     }
 
-    public function filterRegion($word, $idProvince) {
-        $query = Region::with('province');
-
-        if ($word !== 'null' && !empty($word)) {
-            $query = $query->whereRaw("LOWER(name) LIKE ?", ['%' . strtolower($word) .'%']);
-        }
-
-        if ($idProvince !== 'null' && !empty($idProvince)) {
-            $query = $query->where('id_province', $idProvince);
-        }
-
-        return $query->get();
-    }
 }

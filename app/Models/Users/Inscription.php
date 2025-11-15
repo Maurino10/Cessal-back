@@ -25,7 +25,6 @@ class Inscription extends Model
         'email',
         'password',
         'date_inscription',
-        'date_acceptation',
         'status',
         'id_gender',
         'id_tpi',

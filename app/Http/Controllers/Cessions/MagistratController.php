@@ -65,6 +65,10 @@ class MagistratController extends Controller {
 
     public function getMagistratByCession($idCession) {
 
+        $cession = Cession::findOrFail($idCession);
+
+        $this->authorize('view', $cession);
+
         $magistrat = $this->cessionMagistratService->findMagistratByCession($idCession);
 
         return response()->json([
@@ -74,9 +78,17 @@ class MagistratController extends Controller {
 
     public function getAllCessionByMagistrat($idUser, Request $request)
     {
-        $this->authorize('viewAny', CessionMagistrat::class);
+        $cessionMagistrat = CessionMagistrat::where('id_user', $idUser)->first();
 
-        $cessions = $this->cessionMagistratService->findAllCessionByMagistrat($idUser);
+        $this->authorize('view', $cessionMagistrat);
+        $search = $request->input('search');
+        $statut = $request->input('statut');
+
+        $cessions = $this->cessionMagistratService->findAllCessionByMagistrat(
+            $idUser,
+            $search, 
+            $statut, 
+        );
 
         return response()->json([
             'cessions' => $cessions
@@ -92,4 +104,5 @@ class MagistratController extends Controller {
         ]);
 
     }
+
 }  

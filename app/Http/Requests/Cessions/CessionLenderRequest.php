@@ -58,7 +58,9 @@ class CessionLenderRequest extends FormRequest
                 'required',
                 'string',
                 Rule::unique('cession_legal_person', 'name')
-                    ->where(fn ($query) => $query->where('id_tpi', $this->tpi))
+                    ->where(fn ($query) => 
+                        $query->where('id_tpi', $this->tpi)
+                    )
             ];
 
             if ($isUpdate) {
@@ -69,7 +71,9 @@ class CessionLenderRequest extends FormRequest
                     'required',
                     'string',
                     Rule::unique('cession_legal_person', 'name')
-                        ->where(fn ($query) => $query->where('id_tpi', $this->tpi))
+                        ->where(fn ($query) => 
+                            $query->where('id_tpi', $this->tpi)
+                        )
                         ->ignore($cessionLegalPerson?->id_cession_legal_person)
                 ];
             }

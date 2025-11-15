@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\Temps\TempTpi;
+use App\Models\Temps\TempInstance;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class TpiImport implements ToCollection, WithHeadingRow, WithMultipleSheets
+class InstanceImport implements ToCollection, WithHeadingRow, WithMultipleSheets
 {
     public function collection(Collection $rows)
     {
@@ -23,7 +23,7 @@ class TpiImport implements ToCollection, WithHeadingRow, WithMultipleSheets
         });
 
         foreach ($filteredRows as $row) { 
-            TempTpi::create([
+            TempInstance::create([
                 "structure_parente"=> $row["structure_parente"],
                 "structure_fille"=> $row["structure_fille"],
                 "province"=> $row["province"],
@@ -32,7 +32,7 @@ class TpiImport implements ToCollection, WithHeadingRow, WithMultipleSheets
             ]);
         }
 
-        DB::statement("SELECT treatment_temp_tpi()");
+        DB::statement("SELECT treatment_temp_instance()");
     }
     
     public function sheets(): array

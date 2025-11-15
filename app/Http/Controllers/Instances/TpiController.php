@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Instances;
 
+use App\Exports\ModelInstanceExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Instances\TpiRequest;
-use App\Imports\TpiImport;
+use App\Imports\InstanceImport;
 use App\Services\Instances\TpiService;
 use Exception;
 use Illuminate\Http\Request;
@@ -76,9 +77,12 @@ class TpiController extends Controller
 
 // ------------------------------- ------------------------------- ------------------------------- Get All
 
-    public function getAllTPI() {
+    public function getAllTPI(Request $request) {
 
-        $tpi = $this->tpiService->findAllTPI(true);
+        $search = $request->input('search') ?? null;
+        $idCA = $request->input('ca') ?? null;
+
+        $tpi = $this->tpiService->findAllTPI(true, $search, $idCA);
 
         return response()->json([
             "tpi"=> $tpi,
@@ -87,14 +91,14 @@ class TpiController extends Controller
 
 // ------------------------------- ------------------------------- ------------------------------- Import
 
-    public function importTPI(Request $request) 
+    public function importInstance(Request $request) 
     {
         try {
             $request->validate([
                 'file' => 'required|mimes:xlsx,xls,csv'
             ]);
     
-            Excel::import(new TpiImport, $request->file('file'));
+            Excel::import(new InstanceImport, $request->file('file'));
     
             return response()->json(['success', 'Fichier importé avec succès!']);
         } catch (Exception $th) {
@@ -102,26 +106,23 @@ class TpiController extends Controller
         }
     }
 
-// ------------------------------- ------------------------------- ------------------------------- Filter
-    public function filterTPI(Request $request) {
 
-        $word = $request->word;
-        $idProvince = $request->province;
-        $idCA = $request->ca;
-        $idRegion = $request->region;
-        $idDistrict = $request->district;
-
-        $tpi = $this->tpiService->filterTPI($word,$idProvince, $idCA, $idRegion, $idDistrict);
-
-        return response()->json([
-            "tpi"=> $tpi,
-        ]);
-
+    public function exportModelInstance(Request $request) 
+    {
+        try {
+            Log::info("Hello");
+            $fileName = 'modele_instance.xlsx';
+            return Excel::download(new ModelInstanceExport, $fileName);
+        } catch (Exception $th) {
+            Log::info($th);
+        }
     }
+    
+
 
 // ------------------------------- ------------------------------- ------------------------------- Get All No Relations
-    public function getAllWithoutRelations() {
-        $tpi = $this->tpiService->findAllTPI(false);
+    public function getAllTPIWithoutRelations() {
+        $tpi = $this->tpiService->findAllTPI(false, null, null);
 
         return response()->json([
             "tpi"=> $tpi,

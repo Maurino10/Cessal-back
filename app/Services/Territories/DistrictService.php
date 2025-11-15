@@ -24,30 +24,35 @@ class DistrictService {
         return District::where("id", $idDistrict)->delete();
     }
 
-    public function findAllDistrict() {
-        return District::with(['region.province'])->get();
+    public function findAllDistrict($withRelations, $search, $idProvince, $idRegion) {
+
+        if ($withRelations) {
+            $query = District::with('region.province');
+
+            if ($search !== 'null' && $search !== null &&  !empty($search)) {
+                $query = $query->where('name', 'ILIKE', "%$search%");
+            }
+
+            if ($idProvince !== 'null' && $idProvince !== null && !empty($idProvince)) {
+                $query = $query->whereHas('region', function ($q) use ($idProvince) {
+                    $q->where('id_province', $idProvince);
+                });
+            }
+
+            if ($idRegion !== 'null' && $idRegion !== null && !empty($idRegion)) {
+                $query = $query->where('id_region', $idRegion);
+            }
+
+            return $query
+                ->orderBy('name')
+                ->paginate(10);
+        } else {
+            return District::with(['region.province'])->orderBy('name')->get();
+        }
     }
 
     public function findDistrict($idDistrict) {
         return District::findOrFail($idDistrict);
     }
 
-    public function filterDistrict($word, $idProvince, $idRegion) {
-        $query = District::with(['region.province']);
-
-        if ($word !== 'null' && !empty($word)) {
-            $query = $query->whereRaw("LOWER(name) LIKE ?", ['%' . strtolower($word) .'%']);
-        }
-
-        if ($idProvince !== 'null' && !empty($idProvince)) {
-            $query = $query->where('id_province', $idProvince);
-        }
-
-        if ($idRegion !== 'null' && !empty($idRegion)) {
-            $query = $query->where('id_region', $idRegion);
-        }
-
-
-        return $query->get();
-    }
 }

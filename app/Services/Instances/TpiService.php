@@ -27,42 +27,27 @@ class TpiService {
         return Tpi::where("id", $idTPI)->delete();
     }
 
-    public function findAllTPI($withRelations) {
+    public function findAllTPI($withRelations, $search, $idCA) {
         if ($withRelations) {
-            return Tpi::with(['ca', 'district.region.province'])->get();
+            $query = TPI::with(['ca', 'district.region.province']);
+
+            if (!empty($search) && $search !== null) {
+                $query = $query->where('name', 'ILIKE', "%$search%");
+            }
+
+            if ($idCA !== 'null' && $idCA !== null && !empty($idCA)) {
+                $query = $query->where('id_ca', $idCA);
+            }
+
+            return $query
+                ->orderBy('name')
+                ->paginate(10);
         } else {
-            return Tpi::all();
+            return Tpi::orderBy('name')->get();
         }
     }
 
     public function findTPI($idTPI) {
         return Tpi::findOrFail($idTPI);
-    }
-
-    public function filterTPI($word, $idProvince, $idCA, $idRegion, $idDistrict) {
-        $query = TPI::with(['ca', 'district.region.province']);
-
-        if ($word !== 'null' && !empty($word)) {
-            $query = $query->whereRaw("LOWER(name) LIKE ?", ['%' . strtolower($word) .'%']);
-        }
-
-        if ($idProvince !== 'null' && !empty($idProvince)) {
-            $query = $query->where('id_province', $idProvince);
-        }
-
-        if ($idCA !== 'null' && !empty($idCA)) {
-            $query = $query->where('id_ca', $idCA);
-        }
-
-        if ($idRegion !== 'null' && !empty($idRegion)) {
-            $query = $query->where('id_region', $idRegion);
-        }
-
-        if ($idDistrict !== 'null' && !empty($idDistrict)) {
-            $query = $query->where('id_district', $idDistrict);
-        }
-
-
-        return $query->get();
     }
 }

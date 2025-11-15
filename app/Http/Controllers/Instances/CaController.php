@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Instances\CaRequest;
 use App\Services\Instances\CaService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CaController extends Controller
 {
@@ -63,28 +64,23 @@ class CaController extends Controller
 
 // ------------------------------- ------------------------------- ------------------------------- Get All
 
-    public function getAllCA() {
+    public function getAllCA(Request $request) {
 
-        $ca = $this->caService->findAllCA();
+        $search = $request->input('search') ?? null;
+
+        $ca = $this->caService->findAllCA(true, $search);
 
         return response()->json([
             "ca"=> $ca,
         ]);
     }
 
-// ------------------------------- ------------------------------- ------------------------------- Filter
+    public function getAllCAWithoutRelations(Request $request) {
 
-    public function filterCA(Request $request) {
-
-        $word = $request->word;
-        $idProvince = $request->province;
-
-
-        $ca = $this->caService->filterCA($word,$idProvince);
+        $ca = $this->caService->findAllCA(false, null);
 
         return response()->json([
             "ca"=> $ca,
         ]);
-
     }
 }

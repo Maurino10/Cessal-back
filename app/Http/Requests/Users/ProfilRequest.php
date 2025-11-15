@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Users;
 
+use App\Models\Users\Profil;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Log;
 
 class ProfilRequest extends FormRequest
 {
@@ -21,15 +23,30 @@ class ProfilRequest extends FormRequest
      */
     public function rules(): array
     {
+        $idProfil = $this->route('idProfil') ?? null;
+
+        $isUpdate = !is_null($idProfil);
+
+        $cin = 'required|numeric|min:12|unique:profil,cin';
+        $immatriculation = 'required|string|unique:profil,immatriculation';
+        $email = 'required|email|unique:profil,email';
+
+        if ($isUpdate) {
+            $profil = Profil::findOrFail($idProfil);
+            $cin = 'required|numeric|min:12|unique:profil,cin,' . $profil->id;
+            $immatriculation = 'required|string|unique:profil,immatriculation,' . $profil->id;
+            $email = 'required|email|unique:profil,email,' . $profil->id;
+        }
+
         return [
             'last_name' => 'required|string',
             'first_name' => 'required|string',
             'gender' => 'required|string|exists:gender,id',
             'birthday' => 'required|date|before:today',
             'address' => 'required|string',
-            'cin' => 'required|numeric|min:12|unique:profil,cin',
-            'immatriculation' => 'required|string|unique:profil,immatriculation',
-            'email' => 'required|email|unique:users',
+            'cin' => $cin,
+            'immatriculation' => $immatriculation,
+            'email' => $email,
         ];
     }
     public function messages(): array {

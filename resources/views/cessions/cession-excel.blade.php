@@ -1,16 +1,17 @@
 <table border="1">
     <thead>
         <tr>
-            <th>Numéro dossier</th>
-            <th>Objet</th>
-            <th>Montant demandé</th>
-            <th>Date de cession</th>
-            <th>Type</th>
-            <th>Nom</th>
-            <th>Prénom</th>
-            <th>Montant Revenu</th>
-            <th>Montant accordé</th>
-            <th>Pourcentage %</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Numéro dossier</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Objet</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Montant demandé</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Date de cession</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">TPI</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Type</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Nom</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Prénom</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Montant Revenu</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Montant accordé</th>
+            <th height="20"  style="background-color: #f2f2f2; vertical-align: middle;">Pourcentage %</th>
         </tr>
     </thead>
     <tbody>
@@ -30,6 +31,7 @@
                         <td width="50" height="10" valign="center" style="word-wrap: break-word;" rowspan="{{ $rowspan }}">{{ $cession['request_subject'] }}</td>
                         <td width="20" height="10" valign="center" style="text-align: right;" rowspan="{{ $rowspan }}">{{ number_format($cession['reimbursed_amount'], 0, ',', ' ') }} Ar</td>
                         <td width="20" height="10" valign="center" style="text-align: center;" rowspan="{{ $rowspan }}">{{ date("d/m/Y", strtotime($cession['date_cession'])) }}</td>
+                        <td width="50" height="10" valign="center" style="word-wrap: break-word;" rowspan="{{ $rowspan }}">{{ $cession['tpi']['name'] }}</td>
 
                         @php $firstRow = false; @endphp
                     @endif

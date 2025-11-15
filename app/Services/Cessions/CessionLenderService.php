@@ -71,23 +71,44 @@ class CessionLenderService {
 
         $idCessionLegalPerson = $this->cessionLegalService->saveCessionLegalPerson(
             $name, 
-            $address, 
             $idTPI
+        );
+
+        $idCessionLegalPersonAddress = $this->cessionLegalService->saveCessionLegalPersonAddress(
+            $address,
+            $idCessionLegalPerson
         );
 
         $legalPerson = CessionLender::create([
             'id_cession' => $idCession,
             'id_cession_legal_person' => $idCessionLegalPerson,
+            'id_cession_legal_person_address' => $idCessionLegalPersonAddress,
             'type' => 'legal_person'
         ]);
 
         return $legalPerson;
     }
 
-    public function saveCessionLenderLegalPersonExists($idCession, $idCessionLegalPerson) {
+    public function saveCessionLenderLegalPersonExists($idCession, $idCessionLegalPerson, $idCessionLegalPersonAddress) {
         $lender = CessionLender::create([
             'id_cession' => $idCession,
             'id_cession_legal_person' => $idCessionLegalPerson,
+            'id_cession_legal_person_address' => $idCessionLegalPersonAddress,
+            'type' => 'legal_person'
+        ]);
+
+        return $lender;
+    }
+
+    public function saveCessionLenderLegalPersonExistsNewAddress($idCession, $idCessionLegalPerson, $address) {
+        $idCessionLegalPersonAddress = $this->cessionLegalService->saveCessionLegalPersonAddress(
+            $address,
+            $idCessionLegalPerson
+        );
+        $lender = CessionLender::create([
+            'id_cession' => $idCession,
+            'id_cession_legal_person' => $idCessionLegalPerson,
+            'id_cession_legal_person_address' => $idCessionLegalPersonAddress,
             'type' => 'legal_person'
         ]);
 
@@ -141,17 +162,6 @@ class CessionLenderService {
         ); 
     }
 
-    public function updateCessionLenderLegalPerson($idCessionLender, $name, $address) {
-        $lender = CessionLender::findOrFail($idCessionLender);
-        
-        $legalPerson = $this->$this->cessionLegalService->updateCessionLegalPerson(
-            $lender->id_cession_legal_person, 
-            $name,
-            $address
-        );
-
-        return $legalPerson;
-    }
 
     public function deleteCessionLender($idCessionLender) {
         $cessionLender = CessionLender::findOrFail($idCessionLender);
@@ -160,7 +170,7 @@ class CessionLenderService {
     }
 
     public function findAllCessionLenderByCession($idCession) {
-        $lenders = CessionLender::with(['naturalPerson', 'naturalPersonAddress', 'legalPerson'])
+        $lenders = CessionLender::with(['naturalPerson', 'naturalPersonAddress', 'legalPerson', 'legalPersonAddress'])
                         ->where('id_cession', $idCession)
                         ->get();
 

@@ -73,9 +73,22 @@ class DistrictController extends Controller
 
 // ------------------------------- ------------------------------- ------------------------------- Get All
 
-    public function getAllDistrict() {
+    public function getAllDistrict(Request $request) {
 
-        $districts = $this->districtService->findAllDistrict();
+        $search = $request->input('search');
+        $idProvince = $request->input('province');
+        $idRegion = $request->input('region');
+
+        $districts = $this->districtService->findAllDistrict(true, $search, $idProvince, $idRegion);
+
+        return response()->json([
+            "districts"=> $districts,
+        ]);
+    }
+
+    public function getAllDistrictWithoutRelations(Request $request) {
+
+        $districts = $this->districtService->findAllDistrict(false, null, null, null);
 
         return response()->json([
             "districts"=> $districts,
@@ -84,17 +97,4 @@ class DistrictController extends Controller
 
 // ------------------------------- ------------------------------- ------------------------------- Filter
 
-    public function filterDistrict(Request $request) {
-
-        $word = $request->word;
-        $idProvince = $request->province;
-        $idRegion = $request->region;
-
-        $districts = $this->districtService->filterDistrict($word,$idProvince, $idRegion);
-
-        return response()->json([
-            "districts"=> $districts,
-        ]);
-
-    }
 }

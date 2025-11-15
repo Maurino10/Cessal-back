@@ -3,12 +3,12 @@
 namespace App\Services\Cessions;
 
 use App\Models\Cessions\CessionLegalPerson;
+use App\Models\Cessions\CessionLegalPersonAddress;
 class CessionLegalPersonService {
 
-    public function saveCessionLegalPerson($name, $address, $idTPI) {
+    public function saveCessionLegalPerson($name, $idTPI) {
         $legalPerson = CessionLegalPerson::insertGetId([
             'name' => $name,
-            'address' => $address,
             'id_tpi' => $idTPI
         ]);
 
@@ -16,15 +16,14 @@ class CessionLegalPersonService {
     }
 
 
-    public function updateCessionLegalPerson($idCessionLegalPerson, $name, $address) {
+    public function saveCessionLegalPersonAddress($address, $idCessionLegalPerson) {
 
-        $legalPerson = CessionLegalPerson::findOrFail($idCessionLegalPerson);
+        $address = CessionLegalPersonAddress::insertGetId([
+            'address' => $address,
+            'id_cession_legal_person' => $idCessionLegalPerson
+        ]);
 
-        $legalPerson->name = $name;
-        $legalPerson->address = $address;
-        $legalPerson->save();
-        
-        return $legalPerson;
+        return $address;
     }
 
 }

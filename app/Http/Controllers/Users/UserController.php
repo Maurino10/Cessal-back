@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Users;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\InscriptionRequest;
+use App\Http\Requests\Users\ProfilRequest;
 use App\Mail\InscriptionApprovedMail;
 use App\Mail\InscriptionRejectedMail;
 use App\Models\Users\Gender;
@@ -14,7 +15,7 @@ use App\Services\Users\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\ValidationException;
+
 
 class UserController extends Controller 
 {
@@ -59,8 +60,12 @@ class UserController extends Controller
         ], 201);
     }
 
-    public function getAllUser () {
-        $users = $this->userService->findAllUser();
+    public function getAllUser (Request $request) {
+        $search = $request->input('search');
+        $idPost = $request->input('post');
+        $idTPI = $request->input('tpi');
+
+        $users = $this->userService->findAllUser($search, $idPost, $idTPI);
         return response()->json([
             'users' => $users
         ]);
@@ -73,7 +78,35 @@ class UserController extends Controller
         ]);
     }
 
+// ------------------------------- ------------------------------- ------------------------------- Profil
 
+    public function getProfil($idProfil) {
+        $profil = $this->profilService->findProfil($idProfil);
+
+        return response()->json([
+            'profil' => $profil
+        ], 201);         
+    }
+
+    public function editProfil ($idProfil, ProfilRequest $request) {
+        $data = $request->validated();
+
+        $profil = $this->profilService->updateProfil(
+            $idProfil,
+            $data['last_name'],
+            $data['first_name'],
+            $data['birthday'],
+            $data['address'],
+            $data['cin'],
+            $data['immatriculation'],
+            $data['email'],
+            $data['gender'],
+        );
+
+        return response()->json([
+            'profil' => $profil
+        ], 201); 
+    }
 // ------------------------------- ------------------------------- ------------------------------- Post
 
     public function getAllPost (){
@@ -95,13 +128,18 @@ class UserController extends Controller
 
 // ------------------------------- ------------------------------- ------------------------------- Inscription 
 
-    public function getAllInscription () {
-        $inscriptions = $this->inscriptionService->findAllInscription();
+    public function getAllInscription (Request $request) {
+        $search = $request->input('search');
+        $idPost = $request->input('post');
+        $idTPI = $request->input('tpi');
+
+        $inscriptions = $this->inscriptionService->findAllInscription($search, $idPost, $idTPI);
 
         return response()->json([
             'inscriptions' => $inscriptions
         ], 200);
     }
+
     public function inscriptionApproved ($idInscription) {
         $inscription = $this->inscriptionService->updateStatusInscription($idInscription, 1);
 
@@ -118,4 +156,6 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Mails envoyés avec succès.']);
     }  
+
+
 }

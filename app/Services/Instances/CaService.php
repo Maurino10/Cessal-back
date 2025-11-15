@@ -3,6 +3,7 @@
 namespace App\Services\Instances;
 
 use App\Models\Instances\Ca;
+use Illuminate\Support\Facades\Log;
 
 
 class CaService {
@@ -24,25 +25,28 @@ class CaService {
         return Ca::where("id", $idCA)->delete();
     }
 
-    public function findAllCA() {
-        return Ca::with('province')->get();
+    public function findAllCA($withRelations, $search) {
+
+        if($withRelations) {
+            $query = Ca::with('province');
+    
+            if ($search !== 'null' && $search !== null && !empty($search)) {
+                $query->where('name', 'ILIKE', "%$search%")
+                    ->orWhereHas('province', function ($q) use ($search) {
+                        $q->where('name', 'ILIKE', "%$search%");
+                    });
+            }
+    
+            return $query
+                ->orderBy('name')
+                ->paginate(10);
+        } else {
+            return Ca::orderBy('name')->get();
+        }
     }
 
     public function findCA($idCA) {
         return Ca::findOrFail($idCA);
     }
 
-    public function filterCA($word, $idProvince) {
-        $query = Ca::with('province');
-
-        if ($word !== 'null' && !empty($word)) {
-            $query = $query->whereRaw("LOWER(name) LIKE ?", ['%' . strtolower($word) .'%']);
-        }
-
-        if ($idProvince !== 'null' && !empty($idProvince)) {
-            $query = $query->where('id_province', $idProvince);
-        }
-
-        return $query->get();
-    }
 }

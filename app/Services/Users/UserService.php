@@ -5,6 +5,7 @@ namespace App\Services\Users;
 use App\Models\Users\Profil;
 use App\Models\Users\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class UserService {
@@ -20,26 +21,48 @@ class UserService {
         return $user;
     }
 
-    public function updateUser ($idUser, $password, $idProfil, $idPost, $idTPI) {
+    public function updateUser ($idUser, $idPost, $idTPI) {
         $user = User::findOrFail($idUser);
-        $user->password = $password;
-        $user->id_profil = $idProfil;
         $user->id_post = $idPost;
         $user->id_tpi = $idTPI;
         $user->save();
 
         return $user;
-    }   
-
+    }    
     public function deleteUser ($idUser) {
         $user = User::findOrFail($idUser);
         $user->delete();
     }
 
-    public function findAllUser () {
-        $users = User::with(['profil', 'profil.gender', 'tpi', 'post'])->get();
+    public function findAllUser ($search, $idPost, $idTPI) {
+        $users = User::query()
+            ->join('profil', 'users.id_profil', '=', 'profil.id')
+            ->orderBy('profil.last_name')
+            ->select('users.*');
 
-        return $users;
+        if (!empty($idPost) && $idPost !== 'null' && $idPost !== '') {
+            $users->where('id_post', $idPost);
+        }
+
+        if (!empty($idTPI) && $idTPI !== 'null' && $idTPI !== '') {
+            $users->where('id_tpi', $idTPI);
+        }
+
+        if (!empty($search) && $search !== '') {
+            $users->where(function ($query) use ($search) {
+                $query->where('profil.immatriculation', 'ILIKE', "%$search%")
+                ->orWhereHas('profil', function ($q) use ($search) {
+                    $q->whereRaw("CONCAT(last_name, ' ', first_name) ILIKE ?", ["%$search%"])
+                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) ILIKE ?", ["%$search%"]);
+                });
+            });
+        }
+
+
+        return $users->with(['profil.gender', 'tpi', 'post'])
+            ->orderBy('profil.last_name', 'asc')
+            ->orderBy('profil.first_name', 'asc')
+            ->paginate(10);
     }
 
     public function findUser ($idUser) {

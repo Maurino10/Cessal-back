@@ -2,14 +2,14 @@
 
 namespace App\Services\Users;
 
-use App\Models\Users\Post;
 use App\Models\Users\Profil;
+use Illuminate\Support\Facades\Log;
 
 
 class ProfilService {
 
     public function saveProfil ($lastName, $firstName, $birthday, $address, $cin, $immatriculation, $email, $idGenre) {
-        $profil = Post::insertGetId([
+        $profil = Profil::insertGetId([
             'last_name' => $lastName,
             'first_name' => $firstName,
             'birthday' => $birthday,
@@ -24,7 +24,7 @@ class ProfilService {
     }
 
     public function updateProfil ($idProfil, $lastName, $firstName, $birthday, $address, $cin, $immatriculation, $email, $idGenre) {
-        $profil = Post::findOrFail($idProfil);
+        $profil = Profil::findOrFail($idProfil);
         $profil->last_name = $lastName;
         $profil->first_name = $firstName;
         $profil->birthday = $birthday;
@@ -50,7 +50,7 @@ class ProfilService {
     }
 
     public function findProfil ($idProfil) {
-        $profil = Profil::with(['gender', 'user', 'user.tpi', 'user.post'])->findOrFail($idProfil);
+        $profil = Profil::with(['gender', 'user', 'user.tpi', 'user.tpi.ca', 'user.post'])->findOrFail($idProfil);
 
         return $profil;
     }
